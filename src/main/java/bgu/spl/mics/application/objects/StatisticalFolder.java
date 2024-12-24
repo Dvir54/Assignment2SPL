@@ -5,6 +5,7 @@ package bgu.spl.mics.application.objects;
  * This class aggregates metrics such as the runtime of the system,
  * the number of objects detected and tracked, and the number of landmarks identified.
  */
+
 public class StatisticalFolder {
     private int systemRuntime;
     private int numDetectedObjects;
