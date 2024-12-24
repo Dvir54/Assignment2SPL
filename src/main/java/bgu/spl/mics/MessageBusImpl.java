@@ -16,8 +16,8 @@ public class MessageBusImpl implements MessageBus {
 	private final ConcurrentHashMap<MicroService, BlockingQueue<Message>> serviceMessageMap;
 	private final ConcurrentHashMap<Event<?>, Future<?>> eventFutureMap;
 	private final ConcurrentHashMap<Class<? extends Event<?>>, BlockingQueue<MicroService>> eventServiceMap;
-	private final ConcurrentHashMap<Class<? extends Broadcast>, ArrayList<MicroService>> broadcastServiceMap;
-	private static MessageBusImpl instance;
+	private final ConcurrentHashMap<Class<? extends Broadcast>, BlockingQueue<MicroService>> broadcastServiceMap;
+	private static  MessageBusImpl instance;
 
 	private MessageBusImpl() {
 		serviceMessageMap = new ConcurrentHashMap<>();
@@ -54,7 +54,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		ArrayList<MicroService> list = broadcastServiceMap.get(b.getClass());
+		BlockingQueue<MicroService> list = broadcastServiceMap.get(b.getClass());
 		if (list != null) {
 			for (MicroService m : list) {
 				try {

@@ -7,6 +7,7 @@ import java.util.List;
  * Represents the robot's GPS and IMU system.
  * Provides information about the robot's position and movement.
  */
+
 public class GPSIMU {
     private int currentTick;
     private Status status;

@@ -30,6 +30,12 @@ public class LiDarDataBase {
         }
         return instance;
     }
+    public static synchronized LiDarDataBase getInstance() {
+        if (instance == null) {
+            instance = new LiDarDataBase();
+        }
+        return instance;
+    }
 
     public List<StampedCloudPoints> getCloudPoints() {
         return cloudPoints;
