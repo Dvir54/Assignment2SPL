@@ -17,6 +17,7 @@ public class Future<T> {
 	 */
 	private T result;
 	private boolean isResolved;
+	private final Object lock = new Object();
 
 	public Future() {
 		result = null;
@@ -31,7 +32,8 @@ public class Future<T> {
 	 * @return return the result of type T if it is available, if not wait until it is available.
 	 *
 	 */
-	public synchronized T get() {
+	public T get() {
+		synchronized (lock) {
 		while (!isResolved) {
 			try {
 				wait();
@@ -41,26 +43,29 @@ public class Future<T> {
 			}
 		}
 		return result;
+		}
 	}
 
 	/**
 	 * Resolves the result of this Future object.
 	 */
-	public synchronized void resolve (T result) {
-		if (!isResolved) {
-			isResolved = true;
-			this.result = result;
-			notifyAll();
+	public void resolve (T result) {
+		synchronized (lock) {
+			if (!isResolved) {
+				isResolved = true;
+				this.result = result;
+				notifyAll();
+			}
 		}
 	}
-
 	/**
 	 * @return true if this object has been resolved, false otherwise
 	 */
-	public synchronized boolean isDone() {
-		return isResolved;
+	public boolean isDone() {
+		synchronized (lock) {
+			return isResolved;
+		}
 	}
-
 	/**
 	 * retrieves the result the Future object holds if it has been resolved,
 	 * This method is non-blocking, it has a limited amount of time determined
@@ -72,19 +77,21 @@ public class Future<T> {
 	 * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
 	 *         elapsed, return null.
 	 */
-	public synchronized T get(long timeout, TimeUnit unit) {
-		if (!isResolved) {
-			try{
-				wait(unit.toMillis(timeout));
-			}catch (InterruptedException e){
-				Thread.currentThread().interrupt();
+	public T get(long timeout, TimeUnit unit) {
+		synchronized (lock) {
+			if (!isResolved) {
+				try {
+					wait(unit.toMillis(timeout));
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+			}
+			if (!isResolved) {
 				return null;
 			}
+			return result;
 		}
-		if (!isResolved) {
-			return null;
-		}
-		return result;
 	}
 
 }
