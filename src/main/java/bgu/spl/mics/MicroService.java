@@ -164,7 +164,6 @@ public abstract class MicroService implements Runnable {
                     callback.call(message);
                 }
             }catch (InterruptedException exception){
-                terminate();
             }
         }
         messageBus.unregister(this);

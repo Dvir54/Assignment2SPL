@@ -1,7 +1,13 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -12,6 +18,9 @@ import bgu.spl.mics.application.objects.LiDarWorkerTracker;
  * observations.
  */
 public class LiDarService extends MicroService {
+    LiDarWorkerTracker liDarWorkerTracker;
+    StampedDetectedObjects stampedDetectedObjects;
+
 
     /**
      * Constructor for LiDarService.
@@ -19,8 +28,8 @@ public class LiDarService extends MicroService {
      * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
      */
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
-        super("Lidar");
-        // TODO Implement this
+        super("Lidar" + LiDarWorkerTracker.getId());
+        this.liDarWorkerTracker = LiDarWorkerTracker;
     }
 
     /**
@@ -30,6 +39,32 @@ public class LiDarService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
+            int currenTime = tick.getCurrentTime();
+            if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP) {
+                //should put here a  condition that if not exists, change the lidar's status to down
+                if(currenTime <= liDarWorkerTracker.getLastTrackedObjects().get(liDarWorkerTracker.getLastTrackedObjects().size()-1).getTime()){
+                    //send here trackedObjectsEvent to the fusionSlam
+                }
+                else{
+                    liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.DOWN);
+                    sendBroadcast(new TerminatedBroadcast("Lidar"+ liDarWorkerTracker.getId() + " is terminated"));
+                    terminate();
+                }
+            } else if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.ERROR) {
+                sendBroadcast(new CrashedBroadcast("Lidar"+ liDarWorkerTracker.getId() + " is crashed"));
+                terminate();
+            }
+        });
+        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) ->{
+            stampedDetectedObjects = new StampedDetectedObjects(e.getTime() + liDarWorkerTracker.getFrequency(), e.getDetectedObjects());
+        });
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            terminate();
+        });
     }
 }
+//
