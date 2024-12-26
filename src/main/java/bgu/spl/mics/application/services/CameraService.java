@@ -39,22 +39,37 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
+        //updates the detection time to time + frequency
+        for (StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
+            detectedObjects.setTime(camera.getFrequency());
+        }
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             int currenTime = tick.getCurrentTime();
             if (camera.getStatus() == Camera.Status.UP) {
-                for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
-                    if(detectedObjects.getTime() == currenTime){
-                        DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects.getDetectedObjects(),detectedObjects.getTime());
-                        Future<DetectObjectsEvent> future = sendEvent(detectObjectsEvent);//check return type of future
-                        //statisticalFolder
+                //when the camera may have objects to detect at that specific tick
+                if(currenTime <= camera.getDetectedObjectsList().get(camera.getDetectedObjectsList().size()-1).getTime()){
+                    for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
+                        if(detectedObjects.getTime() == currenTime){
+                            DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
+                            sendEvent(detectObjectsEvent);
+                        }
                     }
                 }
-            }
-            else{
-                //crash end program
+                else{
+                    camera.setStatus(Camera.Status.DOWN);
+                    sendBroadcast(new TerminatedBroadcast("camera"+ camera.getId() + " is terminated"));
+                    terminate();
+                }
+            } else if (camera.getStatus() == Camera.Status.ERROR) {
+                sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " is crashed"));
+                terminate();
             }
         });
-        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{});
-        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{});
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            terminate();
+        });
     }
 }

@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.PoseEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.GPSIMU;
 
 /**
@@ -8,6 +13,7 @@ import bgu.spl.mics.application.objects.GPSIMU;
  * and broadcasting PoseEvents at every tick.
  */
 public class PoseService extends MicroService {
+    private final GPSIMU gpsimu;
 
     /**
      * Constructor for PoseService.
@@ -16,7 +22,7 @@ public class PoseService extends MicroService {
      */
     public PoseService(GPSIMU gpsimu) {
         super("Pose");
-        // TODO Implement this
+        this.gpsimu = gpsimu;
     }
 
     /**
@@ -25,6 +31,28 @@ public class PoseService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        subscribeBroadcast(TickBroadcast.class,(TickBroadcast tick) -> {
+            int currenTime = tick.getCurrentTime();
+            if(gpsimu.getStatus() == GPSIMU.Status.UP){
+                if(gpsimu.getCurrentTick() <= gpsimu.getPoseList().size()){//in case that the first tick equals 1
+                    PoseEvent poseEvent = new PoseEvent(gpsimu.getPoseList().get(gpsimu.getCurrentTick()));
+                    sendEvent(poseEvent);
+                    gpsimu.setCurrentTick(currenTime + 1);//check if necessary
+                }
+                else{
+                    gpsimu.setStatus(GPSIMU.Status.DOWN);
+                    sendBroadcast(new TerminatedBroadcast(gpsimu + " is terminated"));
+                }
+            } else if (gpsimu.getStatus() == GPSIMU.Status.ERROR) {
+                sendBroadcast(new CrashedBroadcast(gpsimu + "is crashed"));
+                terminate();
+            }
+        });
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            terminate();
+        });
     }
 }
