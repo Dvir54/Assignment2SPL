@@ -21,6 +21,14 @@ public class StatisticalFolder {
         this.numLandmarks = new AtomicInteger(0);
     }
 
+    private static class StatisticalFolderHolder {
+        private static final StatisticalFolder INSTANCE = new StatisticalFolder();
+    }
+
+    public static StatisticalFolder getInstance() {
+        return StatisticalFolderHolder.INSTANCE;
+    }
+
     public int getSystemRuntime() {
         return systemRuntime.get();
     }
