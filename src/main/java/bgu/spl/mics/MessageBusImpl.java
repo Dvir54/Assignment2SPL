@@ -1,6 +1,6 @@
 package bgu.spl.mics;
 
-import java.util.ArrayList;
+import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,7 +17,7 @@ public class MessageBusImpl implements MessageBus {
 	private final ConcurrentHashMap<Event<?>, Future<?>> eventFutureMap;
 	private final ConcurrentHashMap<Class<? extends Event<?>>, BlockingQueue<MicroService>> eventServiceMap;
 	private final ConcurrentHashMap<Class<? extends Broadcast>, BlockingQueue<MicroService>> broadcastServiceMap;
-	private static  MessageBusImpl instance;
+
 
 	private MessageBusImpl() {
 		serviceMessageMap = new ConcurrentHashMap<>();
@@ -26,20 +26,27 @@ public class MessageBusImpl implements MessageBus {
 		broadcastServiceMap = new ConcurrentHashMap<>();
 	}
 
+	private static class MessageBusHolder {
+		private static final MessageBusImpl INSTANCE = new MessageBusImpl();
+	}
+
+	public static MessageBusImpl getInstance() {
+		return MessageBusHolder.INSTANCE;
+	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		try {
-			eventServiceMap.get(type).put(m);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+
+		synchronized (type) {
+			eventServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>()).add(m);
 		}
 
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		broadcastServiceMap.get(type).add(m);
-
+		synchronized (type) {
+			broadcastServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>()).add(m);
+		}
 	}
 
 	@Override
@@ -55,33 +62,42 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		BlockingQueue<MicroService> list = broadcastServiceMap.get(b.getClass());
-		if (list != null) {
-			for (MicroService m : list) {
-				try {
-					serviceMessageMap.get(m).put(b);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
 
+		if (list != null && !list.isEmpty()) {
+			for (MicroService m : list) {
+				if (m != null) {
+					BlockingQueue<Message> queue = serviceMessageMap.get(m);
+					if (queue != null) {
+						synchronized (queue) {
+							queue.add(b);
+						}
+					}
+
+				}
 			}
 		}
 
 	}
 	
 	@Override
-	public synchronized <T> Future<T> sendEvent(Event<T> e) {
+	public <T> Future<T> sendEvent(Event<T> e) {
+		MicroService m;
 		BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
+
 		if (queue == null || queue.isEmpty()) {
 			return null;
 		}
+		synchronized (queue) {
+			m = queue.poll();
+			queue.add(m);
+		}
 
-		MicroService m = queue.poll();
-		queue.add(m);
+		BlockingQueue<Message> queue2 = serviceMessageMap.get(m);
 
-		try {
-			serviceMessageMap.get(m).put(e);
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
+		if (queue2 != null) {
+			synchronized (queue2) {
+				queue2.add(e);
+			}
 		}
 
 		Future<T> future = new Future<>();
@@ -92,36 +108,40 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void register(MicroService m) {
-		serviceMessageMap.putIfAbsent(m, new LinkedBlockingQueue<>());
-
+		synchronized (m) {
+			serviceMessageMap.putIfAbsent(m, new LinkedBlockingQueue<>());
+		}
 	}
 
 	@Override
-	public synchronized void unregister(MicroService m) {
-		serviceMessageMap.remove(m);
-		eventServiceMap.values().forEach(queue -> queue.remove(m));
-		broadcastServiceMap.values().forEach(list -> list.remove(m));
+	public void unregister(MicroService m) {
+		synchronized (m) {
+			serviceMessageMap.remove(m);
+		}
+		for (Class<? extends Event<?>> type : eventServiceMap.keySet()) {
+			synchronized (type) {
+				eventServiceMap.get(type).remove(m);
+			}
+		}
+
+		for (Class<? extends Broadcast> type2 : broadcastServiceMap.keySet()) {
+			synchronized (type2) {
+				broadcastServiceMap.get(type2).remove(m);
+			}
+		}
 	}
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		BlockingQueue<Message> queue = serviceMessageMap.get(m);
-
-		try {
-			return queue.take();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			return null;
+		if (queue != null) {
+			try {
+				return queue.take();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return null;
+			}
 		}
+		return null;
 	}
-
-	public static MessageBusImpl getInstance() {
-		if (instance == null) {
-			instance = new MessageBusImpl();
-		}
-		return instance;
-	}
-
-	
-
 }

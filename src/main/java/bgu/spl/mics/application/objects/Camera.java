@@ -46,7 +46,8 @@ public class Camera {
         return detectedObjectsList;
     }
 
-    public void addDetectedObject(StampedDetectedObjects detectedObject) {
+    public void addStampedDetectedObject(StampedDetectedObjects detectedObject) {
+        detectedObject.setTime(this.frequency);
         detectedObjectsList.add(detectedObject);
     }
 

@@ -11,7 +11,7 @@ import java.util.List;
 public class GPSIMU {
     private int currentTick;
     private Status status;
-    private final List<Pose> poseList;
+    private final ArrayList<Pose> poseList;
 
     public enum Status {
         UP, DOWN, ERROR
