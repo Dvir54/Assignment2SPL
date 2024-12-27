@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,6 +28,18 @@ public class StampedCloudPoints {
 
     public List<List<Double>> getCloudPoints() {
         return cloudPoints;
+    }
+
+    public List<CloudPoint> toCloudPointList() {
+        List<CloudPoint> cloudPointList = new ArrayList<>();
+        for (List<Double> coordinates : cloudPoints) {
+            if (coordinates.size() >= 2) { // Ensure at least x and y exist
+                double x = coordinates.get(0);
+                double y = coordinates.get(1);
+                cloudPointList.add(new CloudPoint(x, y));
+            }
+        }
+        return cloudPointList;
     }
 
     @Override
