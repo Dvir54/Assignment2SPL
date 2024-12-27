@@ -1,7 +1,11 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.io.FileReader;
 
 /**
  * LiDarDataBase is a singleton class responsible for managing LiDAR data.
@@ -16,37 +20,55 @@ public class LiDarDataBase {
      * @return The singleton instance of LiDarDataBase.
      */
 
-    private final List<StampedCloudPoints> cloudPoints;
+    private final List<StampedCloudPoints> listCloudPoints;
     private static LiDarDataBase instance;
     private final Object lock = new Object();
 
-    private LiDarDataBase() {
-        this.cloudPoints = new ArrayList<>();
+    private LiDarDataBase(List<StampedCloudPoints> cloudPointsList) {
+        this.listCloudPoints = cloudPointsList;
     }
 
     public static LiDarDataBase getInstance(String filePath) {
         if (instance == null) {
-            instance = new LiDarDataBase();
-            // TODO: Load data from file at filePath if needed
-        }
-        return instance;
-    }
-    public static LiDarDataBase getInstance() {
-        if (instance == null) {
-            instance = new LiDarDataBase();
-        }
-        return instance;
-    }
+            synchronized (LiDarDataBase.class) {
+                if (instance == null) {
+                    try {
+                        // Load data from JSON file
+                        Gson gson = new Gson();
+                        Type stampedType = new TypeToken<List<StampedCloudPoints>>() {}.getType();
+                        List<StampedCloudPoints> cloudPointsList = gson.fromJson(new FileReader(filePath), stampedType);
 
-    public List<StampedCloudPoints> getCloudPoints() {
-        synchronized (lock) {
-            return cloudPoints;
+                        // Create the singleton instance with the loaded data
+                        instance = new LiDarDataBase(cloudPointsList);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
+        return instance;
+
     }
 
     public void addCloudPoint(StampedCloudPoints stampedCloudPoint) {
         synchronized (lock) {
-            cloudPoints.add(stampedCloudPoint);
+            listCloudPoints.add(stampedCloudPoint);
+        }
+    }
+
+    public List<StampedCloudPoints> getListCloudPoints() {
+        synchronized (lock) {
+            return listCloudPoints;
+        }
+    }
+    public StampedCloudPoints getCloudPoint(String id) {
+        synchronized (lock) {
+            for (StampedCloudPoints cloudPoint : listCloudPoints) {
+                if (cloudPoint.getId().equals(id)) {
+                    return cloudPoint;
+                }
+            }
+            return null;
         }
     }
 
@@ -54,7 +76,7 @@ public class LiDarDataBase {
     public String toString() {
         synchronized (lock) {
             return "LiDarDataBase{" +
-                    "cloudPoints=" + cloudPoints +
+                    "cloudPoints=" + listCloudPoints +
                     '}';
         }
     }
