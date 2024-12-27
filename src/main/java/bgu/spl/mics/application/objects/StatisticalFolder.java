@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Holds statistical information about the system's operation.
  * This class aggregates metrics such as the runtime of the system,
@@ -7,57 +9,56 @@ package bgu.spl.mics.application.objects;
  */
 
 public class StatisticalFolder {
-    private int systemRuntime;
-    private int numDetectedObjects;
-    private int numTrackedObjects;
-    private int numLandmarks;
+    private final AtomicInteger systemRuntime;
+    private final AtomicInteger numDetectedObjects;
+    private final AtomicInteger numTrackedObjects;
+    private final AtomicInteger numLandmarks;
 
     public StatisticalFolder() {
-        this.systemRuntime = 0;
-        this.numDetectedObjects = 0;
-        this.numTrackedObjects = 0;
-        this.numLandmarks = 0;
+        this.systemRuntime = new AtomicInteger(0);
+        this.numDetectedObjects = new AtomicInteger(0);
+        this.numTrackedObjects = new AtomicInteger(0);
+        this.numLandmarks = new AtomicInteger(0);
     }
 
     public int getSystemRuntime() {
-        return systemRuntime;
+        return systemRuntime.get();
     }
 
     public void incrementSystemRuntime(int ticks) {
-        this.systemRuntime += ticks;
+        systemRuntime.addAndGet(ticks);
     }
 
     public int getNumDetectedObjects() {
-        return numDetectedObjects;
+        return numDetectedObjects.get();
     }
 
     public void incrementDetectedObjects(int count) {
-        this.numDetectedObjects += count;
+        numDetectedObjects.addAndGet(count);
     }
 
     public int getNumTrackedObjects() {
-        return numTrackedObjects;
+        return numTrackedObjects.get();
     }
 
     public void incrementTrackedObjects(int count) {
-        this.numTrackedObjects += count;
+        numTrackedObjects.addAndGet(count);
     }
 
     public int getNumLandmarks() {
-        return numLandmarks;
+        return numLandmarks.get();
     }
 
     public void incrementLandmarks(int count) {
-        this.numLandmarks += count;
+        numLandmarks.addAndGet(count);
     }
 
     @Override
     public String toString() {
-        return "StatisticalFolder{" +
-                "systemRuntime=" + systemRuntime +
-                ", numDetectedObjects=" + numDetectedObjects +
-                ", numTrackedObjects=" + numTrackedObjects +
-                ", numLandmarks=" + numLandmarks +
-                '}';
+        return "StatisticalFolder {" +
+                "\n  System Runtime: " + systemRuntime.get() + " ticks," +
+                "\n  Detected Objects: " + numDetectedObjects.get() + "," +
+                "\n  Tracked Objects: " + numTrackedObjects.get() + "," +
+                "\n  Landmarks: " + numLandmarks.get() + "\n}";
     }
 }

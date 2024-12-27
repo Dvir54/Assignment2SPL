@@ -15,6 +15,7 @@ public class LiDarWorkerTracker {
     private Status status;
     private final List<TrackedObject> lastTrackedObjects;
 
+
     public enum Status {
         UP, DOWN, ERROR
     }

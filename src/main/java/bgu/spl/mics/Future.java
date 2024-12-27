@@ -33,27 +33,29 @@ public class Future<T> {
 	 *
 	 */
 	public T get() {
-		synchronized (lock) {
 		while (!isResolved) {
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				return null;
+			synchronized (lock) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
 			}
 		}
 		return result;
-		}
+
 	}
 
 	/**
 	 * Resolves the result of this Future object.
 	 */
 	public void resolve (T result) {
-		synchronized (lock) {
-			if (!isResolved) {
-				isResolved = true;
-				this.result = result;
+
+		if (!isResolved) {
+			isResolved = true;
+			this.result = result;
+			synchronized (lock) {
 				notifyAll();
 			}
 		}
@@ -71,27 +73,25 @@ public class Future<T> {
 	 * This method is non-blocking, it has a limited amount of time determined
 	 * by {@code timeout}
 	 * <p>
-	 * @param timout 	the maximal amount of time units to wait for the result.
-	 * @param unit		the {@link TimeUnit} time units to wait.
+	 * @param timout the maximal amount of time units to wait for the result.
+	 * @param unit	the {@link TimeUnit} time units to wait.
 	 * @return return the result of type T if it is available, if not,
 	 * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
 	 *         elapsed, return null.
 	 */
 	public T get(long timeout, TimeUnit unit) {
-		synchronized (lock) {
 			if (!isResolved) {
-				try {
-					wait(unit.toMillis(timeout));
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					return null;
+				synchronized (lock) {
+					try {
+						wait(unit.toMillis(timeout));
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
 				}
 			}
-			if (!isResolved) {
-				return null;
-			}
-			return result;
 		}
+		if (!isResolved) {
+			return null;
+		}
+		return result;
 	}
-
 }

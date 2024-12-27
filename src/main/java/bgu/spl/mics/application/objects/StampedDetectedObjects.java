@@ -8,27 +8,31 @@ import java.util.List;
  */
 
 public class StampedDetectedObjects {
-    private final int time;
-    private final List<DetectedObject> detectedObjects;
+    private int time;
+    private final List<DetectedObject> detectedObjectsList;
 
     public StampedDetectedObjects(int time, List<DetectedObject> detectedObjects) {
         this.time = time;
-        this.detectedObjects = detectedObjects;
+        this.detectedObjectsList = detectedObjects;
     }
 
     public int getTime() {
         return time;
     }
 
-    public List<DetectedObject> getDetectedObjects() {
-        return detectedObjects;
+    public List<DetectedObject> getDetectedObjectsList() {
+        return detectedObjectsList;
+    }
+
+    public void setTime(int val){
+        this.time = this.time + val;
     }
 
     @Override
     public String toString() {
         return "StampedDetectedObject{" +
                 "time=" + time +
-                ", detectedObjects=" + detectedObjects +
+                ", detectedObjects=" + detectedObjectsList +
                 '}';
     }
 }

@@ -18,19 +18,20 @@ public class LiDarDataBase {
 
     private final List<StampedCloudPoints> cloudPoints;
     private static LiDarDataBase instance;
+    private final Object lock = new Object();
 
     private LiDarDataBase() {
         this.cloudPoints = new ArrayList<>();
     }
 
-    public static synchronized LiDarDataBase getInstance(String filePath) {
+    public static LiDarDataBase getInstance(String filePath) {
         if (instance == null) {
             instance = new LiDarDataBase();
             // TODO: Load data from file at filePath if needed
         }
         return instance;
     }
-    public static synchronized LiDarDataBase getInstance() {
+    public static LiDarDataBase getInstance() {
         if (instance == null) {
             instance = new LiDarDataBase();
         }
@@ -38,17 +39,23 @@ public class LiDarDataBase {
     }
 
     public List<StampedCloudPoints> getCloudPoints() {
-        return cloudPoints;
+        synchronized (lock) {
+            return cloudPoints;
+        }
     }
 
     public void addCloudPoint(StampedCloudPoints stampedCloudPoint) {
-        cloudPoints.add(stampedCloudPoint);
+        synchronized (lock) {
+            cloudPoints.add(stampedCloudPoint);
+        }
     }
 
     @Override
     public String toString() {
-        return "LiDarDataBase{" +
-                "cloudPoints=" + cloudPoints +
-                '}';
+        synchronized (lock) {
+            return "LiDarDataBase{" +
+                    "cloudPoints=" + cloudPoints +
+                    '}';
+        }
     }
 }
