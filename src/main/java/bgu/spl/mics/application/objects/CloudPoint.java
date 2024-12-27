@@ -7,19 +7,19 @@ package bgu.spl.mics.application.objects;
 
 public class CloudPoint {
 
-    private final int x;
-    private final int y;
+    private final double x;
+    private final double y;
 
-    public CloudPoint(int x, int y) {
+    public CloudPoint(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
-    public int getX() {
+    public double getX() {
         return x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 
