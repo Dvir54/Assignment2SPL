@@ -52,7 +52,15 @@ public class FusionSlam {
 
         for (LandMark landmark : landmarks) {
             if (landmark.getId().equals(obj.getId())){
-                landmark.setAverageCoordinates(list);
+
+                if (landmark.getCoordinates().size() >= obj.getCoordinates().size()) {
+                    landmark.setAverageCoordinates(list);
+
+                }else {
+                    List<CloudPoint> prevList = landmark.getCoordinates();
+                    landmark = new LandMark(obj.getId(), obj.getDescription(), list);
+                    landmark.setAverageCoordinates(prevList);
+                }
                 isExist = true;
             }
         }
