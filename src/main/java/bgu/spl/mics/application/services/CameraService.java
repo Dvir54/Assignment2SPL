@@ -9,6 +9,7 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
+import bgu.spl.mics.application.objects.StatisticalFolder;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ import java.util.List;
  */
 public class CameraService extends MicroService {
     private final Camera camera;
+    private StatisticalFolder statisticalFolder;
 
     /**
      * Constructor for CameraService.
@@ -30,6 +32,7 @@ public class CameraService extends MicroService {
     public CameraService(Camera camera) {
         super("camera" + camera.getId());
         this.camera = camera;
+        statisticalFolder = StatisticalFolder.getInstance();
     }
 
     /**
@@ -50,15 +53,15 @@ public class CameraService extends MicroService {
                 if(currenTime <= camera.getDetectedObjectsList().get(camera.getDetectedObjectsList().size()-1).getTime()){
                     for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
                         if(detectedObjects.getTime() == currenTime){
-                            //check if i have an object with ID error
+                            //check if I have an object with ID error
                             String description = detectedObjects.checkIfError();
                             if(description != null){
-                                //write the description to the json  output file
-                                sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " is crashed"));
+                                sendBroadcast(new CrashedBroadcast(description));
                                 terminate();
                             }
                             else{
                                 DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
+                                statisticalFolder.incrementDetectedObjects(detectedObjects.getDetectedObjectsList().size());
                                 sendEvent(detectObjectsEvent);
                             }
                         }
@@ -66,11 +69,11 @@ public class CameraService extends MicroService {
                 }
                 else{
                     camera.setStatus(Camera.Status.DOWN);
-                    sendBroadcast(new TerminatedBroadcast("camera"+ camera.getId() + " is terminated"));
+                    sendBroadcast(new TerminatedBroadcast("camera"+ camera.getId() + " terminate"));
                     terminate();
                 }
             } else if (camera.getStatus() == Camera.Status.ERROR) {
-                sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " is crashed"));
+                sendBroadcast(new CrashedBroadcast("Sensor camera"+ camera.getId() + " disconnected"));
                 terminate();
             }
         });

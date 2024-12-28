@@ -21,7 +21,7 @@ public class PoseService extends MicroService {
      * @param gpsimu The GPSIMU object that provides the robot's pose data.
      */
     public PoseService(GPSIMU gpsimu) {
-        super("Pose");
+        super("Gpsimu");
         this.gpsimu = gpsimu;
     }
 
@@ -37,14 +37,14 @@ public class PoseService extends MicroService {
                 if(gpsimu.getCurrentTick() <= gpsimu.getPoseList().size()){//in case that the first tick equals 1
                     PoseEvent poseEvent = new PoseEvent(gpsimu.getPoseList().get(gpsimu.getCurrentTick()));
                     sendEvent(poseEvent);
-                    gpsimu.setCurrentTick(currenTime + 1);//check if necessary
+                    gpsimu.setCurrentTick(currenTime + 1);
                 }
                 else{
                     gpsimu.setStatus(GPSIMU.Status.DOWN);
-                    sendBroadcast(new TerminatedBroadcast(gpsimu + " is terminated"));
+                    sendBroadcast(new TerminatedBroadcast(gpsimu + "  terminate"));
                 }
             } else if (gpsimu.getStatus() == GPSIMU.Status.ERROR) {
-                sendBroadcast(new CrashedBroadcast(gpsimu + "is crashed"));
+                sendBroadcast(new CrashedBroadcast(gpsimu + " disconnected"));
                 terminate();
             }
         });

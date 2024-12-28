@@ -12,11 +12,13 @@ import java.util.List;
 public class FusionSlam {
     private final List<LandMark> landmarks;
     private final List<Pose> poses;
+    private int countNewLandMarks;
 
     // Private constructor for Singleton
     private FusionSlam() {
         this.landmarks = new ArrayList<>();
         this.poses = new ArrayList<>();
+        this.countNewLandMarks = 0;
     }
 
     // Singleton instance holder
@@ -46,6 +48,7 @@ public class FusionSlam {
     }
 
     public void updateLandmark(LandMark newLandMark) {
+        countNewLandMarks = 0;
         Boolean isExist = false;
         for (LandMark landmark : landmarks) {
             if (landmark.getId().equals(newLandMark.getId())){
@@ -63,10 +66,14 @@ public class FusionSlam {
 
         }
         if (!isExist) {
+            countNewLandMarks = countNewLandMarks + 1;
             this.addLandmark(new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates()));
         }
     }
 
+    public int getCountNewLandMarks() {
+        return countNewLandMarks;
+    }
 
     @Override
     public String toString() {

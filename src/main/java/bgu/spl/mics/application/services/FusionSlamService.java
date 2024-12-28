@@ -17,6 +17,7 @@ import java.util.List;
 public class FusionSlamService extends MicroService {
     private final FusionSlam fusionSlam;
     private List<LandMark> updateLandMarks;
+    private StatisticalFolder statisticalFolder;
     /**
      * Constructor for FusionSlamService.
      *
@@ -26,6 +27,7 @@ public class FusionSlamService extends MicroService {
         super("FusionSlam");
         this.fusionSlam = fusionSlam;
         updateLandMarks = new ArrayList<>();
+        statisticalFolder = StatisticalFolder.getInstance();
     }
 
     /**
@@ -38,6 +40,7 @@ public class FusionSlamService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             for (LandMark updateLandMark : updateLandMarks){
                 fusionSlam.updateLandmark(updateLandMark);
+                statisticalFolder.incrementLandmarks(fusionSlam.getCountNewLandMarks());
             }
             updateLandMarks.clear();
         });
@@ -55,6 +58,7 @@ public class FusionSlamService extends MicroService {
                 List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
                 LandMark updateLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
                 updateLandMarks.add(updateLandMark);
+                complete(trackedObjectsEvent, true);
             }
         });
 
