@@ -28,6 +28,15 @@ public class StampedDetectedObjects {
         this.time = this.time + val;
     }
 
+    public String checkIfError() {
+        for (DetectedObject obj : detectedObjectsList) {
+            if (obj.getId().equals("ERROR")) {
+                return obj.getDescription();
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "StampedDetectedObject{" +

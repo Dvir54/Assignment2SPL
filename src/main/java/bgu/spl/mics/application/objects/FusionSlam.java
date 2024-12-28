@@ -45,6 +45,23 @@ public class FusionSlam {
         landmarks.add(landmark);
     }
 
+    public void updateLandmark(TrackedObject obj) {
+        Boolean isExist = false;
+        Pose pose = poses.get(obj.getTime());
+        List<CloudPoint> list = obj.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
+
+        for (LandMark landmark : landmarks) {
+            if (landmark.getId().equals(obj.getId())){
+                landmark.setAverageCoordinates(list);
+                isExist = true;
+            }
+        }
+        if (!isExist) {
+            this.addLandmark(new LandMark(obj.getId(), obj.getDescription(), list));
+        }
+    }
+
+
     @Override
     public String toString() {
         return "FusionSlam{" +
