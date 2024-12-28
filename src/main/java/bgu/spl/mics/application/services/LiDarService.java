@@ -1,13 +1,12 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.CrashedBroadcast;
-import bgu.spl.mics.application.messages.DetectObjectsEvent;
-import bgu.spl.mics.application.messages.TerminatedBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.Camera;
-import bgu.spl.mics.application.objects.LiDarWorkerTracker;
-import bgu.spl.mics.application.objects.StampedDetectedObjects;
+import bgu.spl.mics.application.messages.*;
+import bgu.spl.mics.application.objects.*;
+
+import java.util.ArrayList;
+import java.util.Objects;
+
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -18,8 +17,10 @@ import bgu.spl.mics.application.objects.StampedDetectedObjects;
  * observations.
  */
 public class LiDarService extends MicroService {
-    LiDarWorkerTracker liDarWorkerTracker;
-    StampedDetectedObjects stampedDetectedObjects;
+    private final LiDarWorkerTracker liDarWorkerTracker;
+    private ArrayList<TrackedObject> trackedObjects;
+    //Check if to change to blockingQueue
+
 
 
     /**
@@ -30,6 +31,8 @@ public class LiDarService extends MicroService {
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
         super("Lidar" + LiDarWorkerTracker.getId());
         this.liDarWorkerTracker = LiDarWorkerTracker;
+        this.trackedObjects = new ArrayList<>();
+
     }
 
     /**
@@ -43,8 +46,15 @@ public class LiDarService extends MicroService {
             int currenTime = tick.getCurrentTime();
             if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP) {
                 //should put here a  condition that if not exists, change the lidar's status to down
-                if(currenTime <= liDarWorkerTracker.getLastTrackedObjects().get(liDarWorkerTracker.getLastTrackedObjects().size()-1).getTime()){
-                    //send here trackedObjectsEvent to the fusionSlam
+                int size = liDarWorkerTracker.getLiDarDataBase().getListCloudPoints().size()-1;
+                if(currenTime <= liDarWorkerTracker.getLiDarDataBase().getListCloudPoints().get(size).getTime()){
+                    sendEvent(new TrackedObjectsEvent(trackedObjects));
+                    //add the tracked objects to the lastTrackedObjects list
+                    for (TrackedObject trackedObject : trackedObjects){
+                        liDarWorkerTracker.addTrackedObject(trackedObject);
+                    }
+                    //statisticFolder
+                    trackedObjects.clear();
                 }
                 else{
                     liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.DOWN);
@@ -57,7 +67,18 @@ public class LiDarService extends MicroService {
             }
         });
         subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) ->{
-            stampedDetectedObjects = new StampedDetectedObjects(e.getTime() + liDarWorkerTracker.getFrequency(), e.getDetectedObjects());
+            if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP){
+                for (DetectedObject detectedObject : e.getDetectedObjects()){
+                    String id = detectedObject.getId();
+                    StampedCloudPoints stampedCloudPoints = liDarWorkerTracker.getLiDarDataBase().getCloudPoint(id);
+                    TrackedObject trackedObject = new TrackedObject(id, e.getTime() + liDarWorkerTracker.getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
+                    trackedObjects.add(trackedObject);
+                }
+            } else if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.ERROR) {
+                sendBroadcast(new CrashedBroadcast("Lidar"+ liDarWorkerTracker.getId() + " is crashed"));
+                terminate();
+            }
+
         });
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
             terminate();

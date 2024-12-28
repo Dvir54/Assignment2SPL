@@ -45,20 +45,17 @@ public class FusionSlam {
         landmarks.add(landmark);
     }
 
-    public void updateLandmark(TrackedObject obj) {
+    public void updateLandmark(LandMark newLandMark) {
         Boolean isExist = false;
-        Pose pose = poses.get(obj.getTime());
-        List<CloudPoint> list = obj.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
-
         for (LandMark landmark : landmarks) {
-            if (landmark.getId().equals(obj.getId())){
+            if (landmark.getId().equals(newLandMark.getId())){
 
-                if (landmark.getCoordinates().size() >= obj.getCoordinates().size()) {
-                    landmark.setAverageCoordinates(list);
+                if (landmark.getCoordinates().size() >= newLandMark.getCoordinates().size()) {
+                    landmark.setAverageCoordinates(newLandMark.getCoordinates());
 
                 }else {
                     List<CloudPoint> prevList = landmark.getCoordinates();
-                    landmark = new LandMark(obj.getId(), obj.getDescription(), list);
+                    landmark = new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates());
                     landmark.setAverageCoordinates(prevList);
                 }
                 isExist = true;
@@ -66,7 +63,7 @@ public class FusionSlam {
 
         }
         if (!isExist) {
-            this.addLandmark(new LandMark(obj.getId(), obj.getDescription(), list));
+            this.addLandmark(new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates()));
         }
     }
 

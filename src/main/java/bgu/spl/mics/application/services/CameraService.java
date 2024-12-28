@@ -50,8 +50,17 @@ public class CameraService extends MicroService {
                 if(currenTime <= camera.getDetectedObjectsList().get(camera.getDetectedObjectsList().size()-1).getTime()){
                     for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
                         if(detectedObjects.getTime() == currenTime){
-                            DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
-                            sendEvent(detectObjectsEvent);
+                            //check if i have an object with ID error
+                            String description = detectedObjects.checkIfError();
+                            if(description != null){
+                                //write the description to the json  output file
+                                sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " is crashed"));
+                                terminate();
+                            }
+                            else{
+                                DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
+                                sendEvent(detectObjectsEvent);
+                            }
                         }
                     }
                 }

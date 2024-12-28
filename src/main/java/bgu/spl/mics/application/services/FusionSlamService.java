@@ -1,7 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.objects.FusionSlam;
+import bgu.spl.mics.application.messages.*;
+import bgu.spl.mics.application.objects.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * FusionSlamService integrates data from multiple sensors to build and update
@@ -11,6 +15,8 @@ import bgu.spl.mics.application.objects.FusionSlam;
  * transforming and updating the map with new landmarks.
  */
 public class FusionSlamService extends MicroService {
+    private final FusionSlam fusionSlam;
+    private List<LandMark> updateLandMarks;
     /**
      * Constructor for FusionSlamService.
      *
@@ -18,7 +24,8 @@ public class FusionSlamService extends MicroService {
      */
     public FusionSlamService(FusionSlam fusionSlam) {
         super("FusionSlam");
-        // TODO Implement this
+        this.fusionSlam = fusionSlam;
+        updateLandMarks = new ArrayList<>();
     }
 
     /**
@@ -28,6 +35,34 @@ public class FusionSlamService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
+            for (LandMark updateLandMark : updateLandMarks){
+                fusionSlam.updateLandmark(updateLandMark);
+            }
+            updateLandMarks.clear();
+        });
+
+        subscribeEvent(PoseEvent.class, (PoseEvent poseEvent) ->{
+            Pose pose = poseEvent.getCurrPose();
+            fusionSlam.addPose(pose);
+            complete(poseEvent, true);
+        });
+
+        subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent trackedObjectsEvent) ->{
+            List<TrackedObject> trackedObjects = trackedObjectsEvent.getTrackedObjectsList();
+            for (TrackedObject trackedObject : trackedObjects){
+                Pose pose = fusionSlam.getPoses().get(trackedObject.getTime());
+                List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
+                LandMark updateLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
+                updateLandMarks.add(updateLandMark);
+            }
+        });
+
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            terminate();
+        });
     }
 }
