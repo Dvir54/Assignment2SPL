@@ -42,6 +42,7 @@ public class PoseService extends MicroService {
                 else{
                     gpsimu.setStatus(GPSIMU.Status.DOWN);
                     sendBroadcast(new TerminatedBroadcast(gpsimu + "  terminate"));
+                    terminate();
                 }
             } else if (gpsimu.getStatus() == GPSIMU.Status.ERROR) {
                 sendBroadcast(new CrashedBroadcast(gpsimu + " disconnected"));
