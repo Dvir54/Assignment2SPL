@@ -63,6 +63,7 @@ public class FusionSlam {
                 }
                 isExist = true;
             }
+
         }
         if (!isExist) {
             this.addLandmark(new LandMark(obj.getId(), obj.getDescription(), list));
