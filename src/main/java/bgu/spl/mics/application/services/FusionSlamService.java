@@ -58,8 +58,8 @@ public class FusionSlamService extends MicroService {
                 List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
                 LandMark updateLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
                 updateLandMarks.add(updateLandMark);
-                complete(trackedObjectsEvent, true);
             }
+            complete(trackedObjectsEvent, true);
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
