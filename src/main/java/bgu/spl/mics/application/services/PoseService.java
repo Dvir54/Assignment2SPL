@@ -48,9 +48,6 @@ public class PoseService extends MicroService {
                 terminate();
             }
         });
-        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
-            terminate();
-        });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
             terminate();
         });
