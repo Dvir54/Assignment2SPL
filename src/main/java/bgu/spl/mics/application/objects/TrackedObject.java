@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +36,20 @@ public class TrackedObject {
 
     public List<CloudPoint> getCoordinates() {
         return coordinates;
+    }
+
+    public List<CloudPoint> calculateGlobalCoordinates(double x, double y, double yaw) {
+        List<CloudPoint> globalCoordinates = new ArrayList<>();
+
+        double yawRad = Math.toRadians(yaw);
+
+        for (CloudPoint coordinate : coordinates) {
+            double xCoord = coordinate.getX() * Math.cos(yawRad) - coordinate.getY() * Math.sin(yawRad);
+            double yCoord = coordinate.getX() * Math.sin(yawRad) + coordinate.getY() * Math.cos(yawRad);
+            globalCoordinates.add(new CloudPoint(xCoord, yCoord));
+        }
+
+        return globalCoordinates;
     }
 
     @Override

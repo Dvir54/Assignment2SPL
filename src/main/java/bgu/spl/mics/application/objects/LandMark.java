@@ -30,6 +30,18 @@ public class LandMark {
         return coordinates;
     }
 
+    public void setAverageCoordinates(List<CloudPoint> newcoordinatesList) {
+        if (coordinates.size() <= newcoordinatesList.size()) {
+            for (int i = 0; i < coordinates.size(); i++) {
+                this.coordinates.set(i,new CloudPoint((this.coordinates.get(i).getX()+newcoordinatesList.get(i).getX())/2,(this.coordinates.get(i).getY()+newcoordinatesList.get(i).getY())/2));
+            }
+        }else {
+            for (int i = 0; i < newcoordinatesList.size(); i++) {
+                this.coordinates.set(i,new CloudPoint((this.coordinates.get(i).getX()+newcoordinatesList.get(i).getX())/2,(this.coordinates.get(i).getY()+newcoordinatesList.get(i).getY())/2));
+            }
+        }
+    }
+
     @Override
     public String toString() {
         return "Landmark{" +

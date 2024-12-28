@@ -19,11 +19,11 @@ public class Camera {
         UP, DOWN, ERROR
     }
 
-    public Camera(int id, int frequency) {
+    public Camera(int id, int frequency, List<StampedDetectedObjects> stampList) {
         this.id = id;
         this.frequency = frequency;
         this.status = Status.UP;
-        this.detectedObjectsList = new ArrayList<>();
+        this.detectedObjectsList = stampList;
     }
 
     public int getId() {
