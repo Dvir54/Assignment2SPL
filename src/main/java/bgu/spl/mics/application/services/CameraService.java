@@ -42,35 +42,24 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
-        //updates the detection time to time + frequency
-        for (StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
-            detectedObjects.setTime(camera.getFrequency());
-        }
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             int currenTime = tick.getCurrentTime();
             if (camera.getStatus() == Camera.Status.UP) {
                 //when the camera may have objects to detect at that specific tick
-                if(currenTime <= camera.getDetectedObjectsList().get(camera.getDetectedObjectsList().size()-1).getTime()){
-                    for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
-                        if(detectedObjects.getTime() == currenTime){
-                            //check if I have an object with ID error
-                            String description = detectedObjects.checkIfError();
-                            if(description != null){
-                                sendBroadcast(new CrashedBroadcast(description));
-                                terminate();
-                            }
-                            else{
-                                DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
-                                statisticalFolder.incrementDetectedObjects(detectedObjects.getDetectedObjectsList().size());
-                                sendEvent(detectObjectsEvent);
-                            }
+                for(StampedDetectedObjects detectedObjects : camera.getDetectedObjectsList()){
+                    if(detectedObjects.getTime() + camera.getFrequency() == currenTime){
+                        //check if I have an object with ID error
+                        String description = detectedObjects.checkIfError();
+                        if(description != null){
+                            sendBroadcast(new CrashedBroadcast(description));
+                            terminate();
+                        }
+                        else{
+                            DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(detectedObjects);
+                            statisticalFolder.incrementDetectedObjects(detectedObjects.getDetectedObjectsList().size());
+                            sendEvent(detectObjectsEvent);
                         }
                     }
-                }
-                else{
-                    camera.setStatus(Camera.Status.DOWN);
-                    sendBroadcast(new TerminatedBroadcast("camera"+ camera.getId() + " terminate"));
-                    terminate();
                 }
             } else if (camera.getStatus() == Camera.Status.ERROR) {
                 sendBroadcast(new CrashedBroadcast("Sensor camera"+ camera.getId() + " disconnected"));
@@ -78,6 +67,7 @@ public class CameraService extends MicroService {
             }
         });
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            camera.setStatus(Camera.Status.DOWN);
             terminate();
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{

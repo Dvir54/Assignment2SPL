@@ -14,7 +14,6 @@ public class LiDarWorkerTracker {
     private final int frequency;
     private Status status;
     private final List<TrackedObject> lastTrackedObjects;
-    private LiDarDataBase liDarDataBase;
 
 
     public enum Status {
@@ -26,7 +25,6 @@ public class LiDarWorkerTracker {
         this.frequency = frequency;
         this.status = Status.UP;
         this.lastTrackedObjects = new ArrayList<>();
-        this.liDarDataBase = null;
     }
 
     public int getId() {
@@ -39,10 +37,6 @@ public class LiDarWorkerTracker {
 
     public Status getStatus() {
         return status;
-    }
-
-    public LiDarDataBase getLiDarDataBase(String filePath) {
-        return LiDarDataBase.getInstance(filePath);
     }
 
     public void setStatus(Status status) {

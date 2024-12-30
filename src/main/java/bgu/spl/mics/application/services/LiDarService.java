@@ -19,7 +19,9 @@ import java.util.Objects;
 public class LiDarService extends MicroService {
     private final LiDarWorkerTracker liDarWorkerTracker;
     private ArrayList<TrackedObject> trackedObjects;
+    private ArrayList<TrackedObject> sendTrackedObjects;
     private StatisticalFolder statisticalFolder;
+    private LiDarDataBase lidarDataBase = LiDarDataBase.getInstance("src/main/LidarData.json");
     //Check if to change to blockingQueue
 
 
@@ -33,8 +35,8 @@ public class LiDarService extends MicroService {
         super("Lidar" + LiDarWorkerTracker.getId());
         this.liDarWorkerTracker = LiDarWorkerTracker;
         this.trackedObjects = new ArrayList<>();
+        this.sendTrackedObjects = new ArrayList<>();
         statisticalFolder = StatisticalFolder.getInstance();
-
     }
 
     /**
@@ -47,28 +49,24 @@ public class LiDarService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             int currenTime = tick.getCurrentTime();
             if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP) {
-                //should put here a  condition that if not exists, change the lidar's status to down
-                int size = liDarWorkerTracker.getLiDarDataBase().getListCloudPoints().size()-1;
-                if(currenTime <= liDarWorkerTracker.getLiDarDataBase().getListCloudPoints().get(size).getTime()){
-                    if(liDarWorkerTracker.getLiDarDataBase().getListCloudPoints().get(currenTime).getId().equals("ERROR")){
-                        sendBroadcast(new CrashedBroadcast("Sensor lidar"+ liDarWorkerTracker.getId() + " disconnected"));
-                        terminate();
-                    }
-                    else{
-                        statisticalFolder.incrementTrackedObjects(trackedObjects.size());
-                        sendEvent(new TrackedObjectsEvent(trackedObjects));
-                        //add the tracked objects to the lastTrackedObjects list
-                        for (TrackedObject trackedObject : trackedObjects){
-                            liDarWorkerTracker.addTrackedObject(trackedObject);
-                        }
-                        //statisticFolder
-                        trackedObjects.clear();
-                    }
+                if(lidarDataBase.getListCloudPoints().get(currenTime).getId().equals("ERROR")){
+                    sendBroadcast(new CrashedBroadcast("Sensor lidar"+ liDarWorkerTracker.getId() + " disconnected"));
+                    terminate();
                 }
                 else{
-                    liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.DOWN);
-                    sendBroadcast(new TerminatedBroadcast("Lidar"+ liDarWorkerTracker.getId() + " terminate"));
-                    terminate();
+                    for (TrackedObject trackedObject : trackedObjects){
+                        if(trackedObject.getTime() <= currenTime){
+                            sendTrackedObjects.add(trackedObject);
+                            trackedObjects.remove(trackedObject);
+                        }
+                    }
+                    statisticalFolder.incrementTrackedObjects(sendTrackedObjects.size());
+                    sendEvent(new TrackedObjectsEvent(sendTrackedObjects));
+                    //add the tracked objects to the lastTrackedObjects list
+                    for (TrackedObject trackedObject : sendTrackedObjects){
+                        liDarWorkerTracker.addTrackedObject(trackedObject);
+                    }
+                    sendTrackedObjects.clear();
                 }
             } else if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.ERROR) {
                 sendBroadcast(new CrashedBroadcast("Sensor lidar"+ liDarWorkerTracker.getId() + " disconnected"));
@@ -79,7 +77,7 @@ public class LiDarService extends MicroService {
             if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP){
                 for (DetectedObject detectedObject : e.getDetectedObjects()){
                     String id = detectedObject.getId();
-                    StampedCloudPoints stampedCloudPoints = liDarWorkerTracker.getLiDarDataBase().getCloudPoint(id);
+                    StampedCloudPoints stampedCloudPoints = lidarDataBase.getCloudPoint(id);
                     TrackedObject trackedObject = new TrackedObject(id, e.getTime() + liDarWorkerTracker.getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
                     trackedObjects.add(trackedObject);
                 }
@@ -91,6 +89,8 @@ public class LiDarService extends MicroService {
 
         });
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            trackedObjects.clear();
+            liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.DOWN);
             terminate();
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
