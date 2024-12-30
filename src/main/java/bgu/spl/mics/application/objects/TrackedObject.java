@@ -44,8 +44,8 @@ public class TrackedObject {
         double yawRad = Math.toRadians(yaw);
 
         for (CloudPoint coordinate : coordinates) {
-            double xCoord = coordinate.getX() * Math.cos(yawRad) - coordinate.getY() * Math.sin(yawRad);
-            double yCoord = coordinate.getX() * Math.sin(yawRad) + coordinate.getY() * Math.cos(yawRad);
+            double xCoord = coordinate.getX() * Math.cos(yawRad) - coordinate.getY() * Math.sin(yawRad) + x;
+            double yCoord = coordinate.getX() * Math.sin(yawRad) + coordinate.getY() * Math.cos(yawRad) + y;
             globalCoordinates.add(new CloudPoint(xCoord, yCoord));
         }
 

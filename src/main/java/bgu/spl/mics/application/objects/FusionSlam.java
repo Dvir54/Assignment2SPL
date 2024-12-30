@@ -50,16 +50,18 @@ public class FusionSlam {
     public void updateLandmark(LandMark newLandMark) {
         countNewLandMarks = 0;
         Boolean isExist = false;
-        for (LandMark landmark : landmarks) {
-            if (landmark.getId().equals(newLandMark.getId())){
+        for (int i = 0; i < landmarks.size(); i++) {
+            if (landmarks.get(i).getId().equals(newLandMark.getId())){
 
-                if (landmark.getCoordinates().size() >= newLandMark.getCoordinates().size()) {
-                    landmark.setAverageCoordinates(newLandMark.getCoordinates());
+                if (landmarks.get(i).getCoordinates().size() >= newLandMark.getCoordinates().size()) {
+                    landmarks.get(i).setAverageCoordinates(newLandMark.getCoordinates());
 
                 }else {
-                    List<CloudPoint> prevList = landmark.getCoordinates();
-                    landmark = new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates());
+                    List<CloudPoint> prevList = landmarks.get(i).getCoordinates();
+                    landmarks.remove(landmarks.get(i));
+                    LandMark landmark = new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates());
                     landmark.setAverageCoordinates(prevList);
+                    landmarks.add(i, landmark);
                 }
                 isExist = true;
             }
