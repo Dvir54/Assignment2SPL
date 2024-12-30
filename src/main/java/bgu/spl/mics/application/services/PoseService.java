@@ -34,20 +34,17 @@ public class PoseService extends MicroService {
         subscribeBroadcast(TickBroadcast.class,(TickBroadcast tick) -> {
             int currenTime = tick.getCurrentTime();
             if(gpsimu.getStatus() == GPSIMU.Status.UP){
-                if(gpsimu.getCurrentTick() <= gpsimu.getPoseList().size()){//in case that the first tick equals 1
-                    PoseEvent poseEvent = new PoseEvent(gpsimu.getPoseList().get(gpsimu.getCurrentTick()));
-                    sendEvent(poseEvent);
-                    gpsimu.setCurrentTick(currenTime + 1);
-                }
-                else{
-                    gpsimu.setStatus(GPSIMU.Status.DOWN);
-                    sendBroadcast(new TerminatedBroadcast(gpsimu + "  terminate"));
-                    terminate();
-                }
+                PoseEvent poseEvent = new PoseEvent(gpsimu.getPoseList().get(gpsimu.getCurrentTick()));
+                sendEvent(poseEvent);
+                gpsimu.setCurrentTick(currenTime + 1);
             } else if (gpsimu.getStatus() == GPSIMU.Status.ERROR) {
                 sendBroadcast(new CrashedBroadcast(gpsimu + " disconnected"));
                 terminate();
             }
+        });
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
+            gpsimu.setStatus(GPSIMU.Status.DOWN);
+            terminate();
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
             terminate();
