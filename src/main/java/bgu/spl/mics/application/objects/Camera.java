@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,7 +46,6 @@ public class Camera {
     }
 
     public void addStampedDetectedObject(StampedDetectedObjects detectedObject) {
-        detectedObject.setTime(this.frequency);
         detectedObjectsList.add(detectedObject);
     }
 

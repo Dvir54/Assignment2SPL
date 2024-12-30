@@ -1,6 +1,5 @@
 package bgu.spl.mics;
 
-import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -134,14 +133,12 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		BlockingQueue<Message> queue = serviceMessageMap.get(m);
-		if (queue != null) {
-			try {
-				return queue.take();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				return null;
-			}
+		try {
+			return queue.take();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw e;
 		}
-		return null;
 	}
+
 }
