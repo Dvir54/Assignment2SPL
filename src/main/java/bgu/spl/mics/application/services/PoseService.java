@@ -34,7 +34,7 @@ public class PoseService extends MicroService {
         subscribeBroadcast(TickBroadcast.class,(TickBroadcast tick) -> {
             int currenTime = tick.getCurrentTime();
             if(gpsimu.getStatus() == GPSIMU.Status.UP){
-                if(currenTime <= gpsimu.getPoseList().size()){
+                if(currenTime < gpsimu.getPoseList().size()){
                     PoseEvent poseEvent = new PoseEvent(gpsimu.getPoseList().get(gpsimu.getCurrentTick()));
                     sendEvent(poseEvent);
                     gpsimu.setCurrentTick(currenTime + 1);

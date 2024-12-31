@@ -58,6 +58,10 @@ public class Camera {
         return null;
     }
 
+    public String checkError(StampedDetectedObjects stampedDetectedObjects) {
+        return stampedDetectedObjects.checkIfError();
+    }
+
 
     @Override
     public String toString() {
