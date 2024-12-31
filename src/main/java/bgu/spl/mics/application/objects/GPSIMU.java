@@ -18,10 +18,10 @@ public class GPSIMU {
         UP, DOWN, ERROR
     }
 
-    public GPSIMU(int initialTick) {
-        this.currentTick = initialTick;
+    public GPSIMU(List<Pose> poseList) {
+        this.currentTick = 0;
         this.status = Status.UP;
-        this.poseList = new ArrayList<>();
+        this.poseList = poseList;
     }
 
     public int getCurrentTick() {
@@ -42,10 +42,6 @@ public class GPSIMU {
 
     public List<Pose> getPoseList() {
         return poseList;
-    }
-
-    public void addPose(Pose pose) {
-        poseList.add(pose);
     }
 
     @Override

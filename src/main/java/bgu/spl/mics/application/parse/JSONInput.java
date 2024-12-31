@@ -1,13 +1,13 @@
 package bgu.spl.mics.application.parse;
 
 public class JSONInput {
-    private CameraJson[] Cameras;
+    private CameraJson Cameras;
     private LidarJson LiDarWorkers;
     private String poseJsonFile;
     private int TickTime;
     private int Duration;
 
-    public CameraJson[] getCameras() {
+    public CameraJson getCameras() {
         return Cameras;
     }
 
@@ -27,7 +27,7 @@ public class JSONInput {
         return Duration;
     }
 
-    public void setCameras(CameraJson[] cameras) {
+    public void setCameras(CameraJson cameras) {
         Cameras = cameras;
     }
 
