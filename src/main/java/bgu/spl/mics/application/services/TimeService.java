@@ -36,19 +36,24 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        try {
-            while (currentTick < duration){
-                currentTick = currentTick +1;
-                statisticalFolder.incrementSystemRuntime(1);
-                sendBroadcast(new TickBroadcast(currentTick));
-                Thread.sleep(tickTime);
+
+        subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
+            try {
+                if (currentTick <= duration){
+                    currentTick = currentTick +1;
+                    statisticalFolder.incrementSystemRuntime(1);
+                    sendBroadcast(new TickBroadcast(currentTick));
+                    Thread.sleep(tickTime);
+                }
+                else {
+                    sendBroadcast(new TerminatedBroadcast("TimeService"));
+                    terminate();
+                }
             }
-        }
-        catch (InterruptedException e){
-            Thread.currentThread().interrupt();
-        }finally {
-            sendBroadcast(new TerminatedBroadcast("Time service terminate"));
-            terminate();
-        }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        sendBroadcast(new TickBroadcast(currentTick));
     }
 }

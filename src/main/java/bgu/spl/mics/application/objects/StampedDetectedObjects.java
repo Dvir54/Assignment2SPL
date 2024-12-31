@@ -24,6 +24,7 @@ public class StampedDetectedObjects {
         return detectedObjectsList;
     }
 
+    //check if to delete
     public void setTime(int val){
         this.time = this.time + val;
     }

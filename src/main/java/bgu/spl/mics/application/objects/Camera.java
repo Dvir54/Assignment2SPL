@@ -49,6 +49,16 @@ public class Camera {
         detectedObjectsList.add(detectedObject);
     }
 
+    public StampedDetectedObjects getStampedDetectedObject(int tickTime) {
+        for (StampedDetectedObjects stampedDetectedObjects : detectedObjectsList) {
+            if (stampedDetectedObjects.getTime() + getFrequency() == tickTime) {
+                return stampedDetectedObjects;
+            }
+        }
+        return null;
+    }
+
+
     @Override
     public String toString() {
         return "Camera{" +
