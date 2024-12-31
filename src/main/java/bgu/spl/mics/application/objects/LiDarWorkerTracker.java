@@ -14,6 +14,7 @@ public class LiDarWorkerTracker {
     private final int frequency;
     private Status status;
     private final List<TrackedObject> lastTrackedObjects;
+    LiDarDataBase liDarDataBase;
 
 
     public enum Status {
@@ -25,6 +26,7 @@ public class LiDarWorkerTracker {
         this.frequency = frequency;
         this.status = Status.UP;
         this.lastTrackedObjects = new ArrayList<>();
+        this.liDarDataBase = LiDarDataBase.getInstance("src/main/resources/LiDarData.json");
     }
 
     public int getId() {
@@ -45,6 +47,35 @@ public class LiDarWorkerTracker {
 
     public List<TrackedObject> getLastTrackedObjects() {
         return lastTrackedObjects;
+    }
+
+    public ArrayList<TrackedObject> createTrackedObjectsList(List<DetectedObject> detectedObjectList, int time){
+        ArrayList<TrackedObject> trackedObjects = new ArrayList<>();
+        for (DetectedObject detectedObject : detectedObjectList){
+            String id = detectedObject.getId();
+            StampedCloudPoints stampedCloudPoints = liDarDataBase.getCloudPoint(id, time);
+            TrackedObject trackedObject = new TrackedObject(id, time + getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
+            trackedObjects.add(trackedObject);
+        }
+        return trackedObjects;
+    }
+
+    public ArrayList<TrackedObject> createListToSend(int time, ArrayList<TrackedObject> trackedObjects){
+        ArrayList<TrackedObject> sendTrackedObjects = new ArrayList<>();
+        for(TrackedObject trackedObject : trackedObjects){
+            if(trackedObject.getTime() <= time){
+                if(liDarDataBase.getCloudPoint(trackedObject.getId(), time).getId().equals("ERROR")){
+                    setStatus(Status.ERROR);
+                    return null;
+                }
+                else{
+                    sendTrackedObjects.add(trackedObject);
+                    trackedObjects.remove(trackedObject);
+                    lastTrackedObjects.add(trackedObject);
+                }
+            }
+        }
+        return sendTrackedObjects;
     }
 
     public void addTrackedObject(TrackedObject trackedObject) {

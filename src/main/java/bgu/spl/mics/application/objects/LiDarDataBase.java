@@ -61,11 +61,11 @@ public class LiDarDataBase {
             return listCloudPoints;
         }
     }
-    public StampedCloudPoints getCloudPoint(String id) {
+    public StampedCloudPoints getCloudPoint(String id, int time) {
         synchronized (lock) {
-            for (StampedCloudPoints cloudPoint : listCloudPoints) {
-                if (cloudPoint.getId().equals(id)) {
-                    return cloudPoint;
+            for (StampedCloudPoints stampedCloudPoints : listCloudPoints) {
+                if (stampedCloudPoints.getTime() == time && stampedCloudPoints.getId().equals(id)) {
+                    return stampedCloudPoints;
                 }
             }
             return null;
