@@ -13,12 +13,14 @@ public class FusionSlam {
     private final List<LandMark> landmarks;
     private final List<Pose> poses;
     private int countNewLandMarks;
+    private int countMicroServices;
 
     // Private constructor for Singleton
     private FusionSlam() {
         this.landmarks = new ArrayList<>();
         this.poses = new ArrayList<>();
         this.countNewLandMarks = 0;
+        this.countMicroServices = 0;
     }
 
     // Singleton instance holder
@@ -75,6 +77,18 @@ public class FusionSlam {
 
     public int getCountNewLandMarks() {
         return countNewLandMarks;
+    }
+
+    public int getCountMicroServices() {
+        return countMicroServices;
+    }
+
+    public void addMicroService() {
+        countMicroServices++;
+    }
+
+    public void reduceMicroService() {
+        countMicroServices--;
     }
 
     @Override
