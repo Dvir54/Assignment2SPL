@@ -14,12 +14,12 @@ public class JsonOutput {
     public static void writeStatisticalFolderToJson(String outputFilePath) {
         StatisticalFolder folder = StatisticalFolder.getInstance();
 
-        // המרה ל-JSON עם פורמט יפה
+        // Converts to json
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonOutput = gson.toJson(folder);
         System.out.println(jsonOutput);
 
-        // כתיבה לקובץ
+        //Writes to file
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write(jsonOutput);
         } catch (IOException e) {
@@ -30,12 +30,13 @@ public class JsonOutput {
     public static void writeLandMarksMapToJson(String outputFilePath) {
         List<LandMark> folder = FusionSlam.getInstance().getLandmarks();
 
-        // המרה ל-JSON עם פורמט יפה
-        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
+        //Converts to json
+//        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson2 = new Gson();
         String jsonOutput1 = gson2.toJson(folder);
         System.out.println(jsonOutput1);
 
-        // כתיבה לקובץ
+        // writes to file
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write(jsonOutput1);
         } catch (IOException e) {
