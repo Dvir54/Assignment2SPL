@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.StatisticalFolder;
@@ -26,7 +27,7 @@ public class TimeService extends MicroService {
         super("Time");
         this.tickTime = TickTime;
         this.duration = Duration;
-        this.currentTick = 1;
+        this.currentTick = 0;
         statisticalFolder = StatisticalFolder.getInstance();
     }
 
@@ -37,13 +38,22 @@ public class TimeService extends MicroService {
     @Override
     protected void initialize() {
 
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminatedBroadcast) -> {
+            if(terminatedBroadcast.getSenderId().equals("FusionSlam terminated")){
+                terminate();
+            }
+        });
+
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast terminatedBroadcast) -> {
+            terminate();
+        });
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             try {
                 if (currentTick <= duration){
                     currentTick = currentTick +1;
                     statisticalFolder.incrementSystemRuntime(1);
                     sendBroadcast(new TickBroadcast(currentTick));
-                    Thread.sleep(tickTime);
+                    Thread.sleep(tickTime*1000);
                 }
                 else {
                     sendBroadcast(new TerminatedBroadcast("TimeService"));

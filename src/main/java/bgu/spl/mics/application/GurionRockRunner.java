@@ -91,6 +91,10 @@ public class GurionRockRunner {
                 LiDarWorkerTracker newLiDarWorkerTracker = new LiDarWorkerTracker(lidar.getId(), lidar.getFrequency(), dataPath);
                 LiDarWorkerList.add(newLiDarWorkerTracker);
             }
+            for (LiDarWorkerTracker lidarWorker : LiDarWorkerList) {
+                System.out.println("Created LiDarWorkerTracker: " + lidarWorker);
+            }
+
             //build the posses list for GPSiMU
             String poseJsonFile = filebase + input.getPoseJsonFile();
             try (FileReader poseReader = new FileReader(poseJsonFile)) {
@@ -98,6 +102,7 @@ public class GurionRockRunner {
                 Type listType = new TypeToken<List<Pose>>() {
                 }.getType();
                 posesList = gson.fromJson(poseReader, listType);
+                System.out.println(posesList);
             } catch (IOException e) {
                 System.out.println("Error reading the file: " + e.getMessage());
             }
@@ -151,11 +156,10 @@ public class GurionRockRunner {
                 System.err.println("Thread interrupted: " + e.getMessage());
             }
 
-
-//            writeStatisticalFolderToJson("./output.json");
-//            writeLandMarksMapToJson("./output.json");
-
         }
+
+        writeStatisticalFolderToJson("./output.json");
+        writeLandMarksMapToJson("./output.json");
 
     }
 }
