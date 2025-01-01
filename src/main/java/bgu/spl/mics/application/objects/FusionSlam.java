@@ -1,7 +1,10 @@
 package bgu.spl.mics.application.objects;
 
+import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Manages the fusion of sensor data for simultaneous localization and mapping (SLAM).
@@ -12,15 +15,15 @@ import java.util.List;
 public class FusionSlam {
     private final List<LandMark> landmarks;
     private final List<Pose> poses;
-    private int countNewLandMarks;
     private int countMicroServices;
+    private StatisticalFolder statisticalFolder;
 
     // Private constructor for Singleton
     private FusionSlam() {
         this.landmarks = new ArrayList<>();
         this.poses = new ArrayList<>();
-        this.countNewLandMarks = 0;
         this.countMicroServices = 0;
+        this.statisticalFolder = StatisticalFolder.getInstance();
     }
 
     // Singleton instance holder
@@ -50,7 +53,6 @@ public class FusionSlam {
     }
 
     public void updateLandmark(LandMark newLandMark) {
-        countNewLandMarks = 0;
         Boolean isExist = false;
         for (int i = 0; i < landmarks.size(); i++) {
             if (landmarks.get(i).getId().equals(newLandMark.getId())){
@@ -70,14 +72,22 @@ public class FusionSlam {
 
         }
         if (!isExist) {
-            countNewLandMarks = countNewLandMarks + 1;
+            statisticalFolder.incrementLandmarks(1);
             this.addLandmark(new LandMark(newLandMark.getId(), newLandMark.getDescription(), newLandMark.getCoordinates()));
         }
     }
 
-    public int getCountNewLandMarks() {
-        return countNewLandMarks;
+    public void createLandMarks(TrackedObjectsEvent trackedObjectsEvent, int time){
+            List<TrackedObject> trackedObjects = trackedObjectsEvent.getTrackedObjectsList();
+            Pose pose = poses.get(time - 2);
+            for (TrackedObject trackedObject : trackedObjects) {
+                List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
+                LandMark newLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
+                updateLandmark(newLandMark);
+            }
+
     }
+
 
     public int getCountMicroServices() {
         return countMicroServices;

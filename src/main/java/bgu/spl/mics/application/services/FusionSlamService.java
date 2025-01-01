@@ -6,6 +6,7 @@ import bgu.spl.mics.application.objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * FusionSlamService integrates data from multiple sensors to build and update
@@ -16,8 +17,8 @@ import java.util.List;
  */
 public class FusionSlamService extends MicroService {
     private final FusionSlam fusionSlam;
+    private ConcurrentLinkedQueue<TrackedObjectsEvent> trackedObjectEventList;
     private List<LandMark> updateLandMarks;
-    private StatisticalFolder statisticalFolder;
     /**
      * Constructor for FusionSlamService.
      *
@@ -26,8 +27,8 @@ public class FusionSlamService extends MicroService {
     public FusionSlamService(FusionSlam fusionSlam) {
         super("FusionSlam");
         this.fusionSlam = fusionSlam;
+        this.trackedObjectEventList = new ConcurrentLinkedQueue<>();
         updateLandMarks = new ArrayList<>();
-        statisticalFolder = StatisticalFolder.getInstance();
     }
 
     /**
@@ -38,11 +39,13 @@ public class FusionSlamService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
-            for (LandMark updateLandMark : updateLandMarks){
-                fusionSlam.updateLandmark(updateLandMark);
-                statisticalFolder.incrementLandmarks(fusionSlam.getCountNewLandMarks());
+            int currTick = tick.getCurrentTime();
+            for(TrackedObjectsEvent trackedObjectsEvent : trackedObjectEventList){
+                fusionSlam.createLandMarks(trackedObjectsEvent, currTick);
+
+                trackedObjectEventList.remove(trackedObjectsEvent);
+                complete(trackedObjectsEvent, true);
             }
-            updateLandMarks.clear();
         });
 
         subscribeEvent(PoseEvent.class, (PoseEvent poseEvent) ->{
@@ -52,21 +55,15 @@ public class FusionSlamService extends MicroService {
         });
 
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent trackedObjectsEvent) ->{
-            List<TrackedObject> trackedObjects = trackedObjectsEvent.getTrackedObjectsList();
-            for (TrackedObject trackedObject : trackedObjects){
-                Pose pose = fusionSlam.getPoses().get(trackedObject.getTime());
-                List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
-                LandMark updateLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
-                updateLandMarks.add(updateLandMark);
-            }
-            complete(trackedObjectsEvent, true);
+            trackedObjectEventList.add(trackedObjectsEvent);
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
             if(terminated.getSenderId().equals("TimeService")){
                 terminate();
             }
-            else if (fusionSlam.getCountMicroServices() == 0){
+            else if (fusionSlam.getCountMicroServices() == 1){
+                fusionSlam.reduceMicroService();
                 sendBroadcast(new TerminatedBroadcast("FusionSlam terminated"));
                 terminate();
             }

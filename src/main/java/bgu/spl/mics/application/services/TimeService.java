@@ -27,7 +27,7 @@ public class TimeService extends MicroService {
         super("Time");
         this.tickTime = TickTime;
         this.duration = Duration;
-        this.currentTick = 0;
+        this.currentTick = 1;
         statisticalFolder = StatisticalFolder.getInstance();
     }
 
@@ -53,7 +53,7 @@ public class TimeService extends MicroService {
                     currentTick = currentTick +1;
                     statisticalFolder.incrementSystemRuntime(1);
                     sendBroadcast(new TickBroadcast(currentTick));
-                    Thread.sleep(tickTime*1000);
+                    Thread.sleep(tickTime);
                 }
                 else {
                     sendBroadcast(new TerminatedBroadcast("TimeService"));

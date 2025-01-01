@@ -41,7 +41,7 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input_2/";
+        String filebase = "example_input/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -109,27 +109,31 @@ public class GurionRockRunner {
 
             //build GPSiMU
             GPSIMU gpsimu = new GPSIMU(posesList);
+
             // Register Microservices
+
+            FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
+            messageBus.register(fusionSlamService);
+            microServices.add(fusionSlamService);
+
             PoseService poseService = new PoseService(gpsimu);
             messageBus.register(poseService);
             microServices.add(poseService);
+            fusionSlam.addMicroService();
 
             for (Camera camera : camerasList) {
                 CameraService cameraService = new CameraService(camera);
                 messageBus.register(cameraService);
                 microServices.add(cameraService);
+                fusionSlam.addMicroService();
             }
 
             for (LiDarWorkerTracker lidarWorker : LiDarWorkerList) {
                 LiDarService lidarService = new LiDarService(lidarWorker, dataPath);
-
                 messageBus.register(lidarService);
                 microServices.add(lidarService);
+                fusionSlam.addMicroService();
             }
-
-            FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
-            messageBus.register(fusionSlamService);
-            microServices.add(fusionSlamService);
 
             timeService = new TimeService(input.getTickTime(), input.getDuration());
             messageBus.register(timeService);
@@ -158,8 +162,8 @@ public class GurionRockRunner {
 
         }
 
-        writeStatisticalFolderToJson("./output.json");
         writeLandMarksMapToJson("./output.json");
+        writeStatisticalFolderToJson("./output.json");
 
     }
 }

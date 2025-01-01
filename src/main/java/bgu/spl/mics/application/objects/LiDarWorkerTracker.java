@@ -75,9 +75,11 @@ public class LiDarWorkerTracker {
             if(detectObjectsEvent.getStampedDetectedObjects().getTime() + getFrequency() <= time){
                 for (DetectedObject detectedObject : detectObjectsEvent.getStampedDetectedObjects().getDetectedObjectsList()){
                     String id = detectedObject.getId();
-                    StampedCloudPoints stampedCloudPoints = liDarDataBase.getCloudPoint(id, detectObjectsEvent.getStampedDetectedObjects().getTime());
-                    TrackedObject trackedObject = new TrackedObject(id, detectObjectsEvent.getStampedDetectedObjects().getTime() + getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
-                    sendTrackedObjects.add(trackedObject);
+                    if(liDarDataBase.getCloudPoint(id, detectObjectsEvent.getStampedDetectedObjects().getTime()) != null){
+                        StampedCloudPoints stampedCloudPoints = liDarDataBase.getCloudPoint(id, detectObjectsEvent.getStampedDetectedObjects().getTime());
+                        TrackedObject trackedObject = new TrackedObject(id, detectObjectsEvent.getStampedDetectedObjects().getTime() + getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
+                        sendTrackedObjects.add(trackedObject);
+                    }
                 }
                 detectObjectsEvents.remove(detectObjectsEvent);
                 doneDetectObjectsEvents.add(detectObjectsEvent);
