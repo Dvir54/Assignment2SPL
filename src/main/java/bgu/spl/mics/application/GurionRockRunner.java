@@ -9,12 +9,16 @@ import bgu.spl.mics.application.parse.LidarConfigurations;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static bgu.spl.mics.application.parse.JsonOutput.writeLandMarksMapToJson;
+import static bgu.spl.mics.application.parse.JsonOutput.writeStatisticalFolderToJson;
 
 /**
  * The main entry point for the GurionRock Pro Max Ultra Over 9000 simulation.
@@ -33,11 +37,11 @@ public class GurionRockRunner {
      * @param args Command-line arguments. The first argument is expected to be the path to the configuration file.
      */
     public static void main(String[] args) {
-        System.out.println("Hello World!");
 
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
+        String filebase = "example_input_2/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -46,6 +50,7 @@ public class GurionRockRunner {
         List<LiDarWorkerTracker> LiDarWorkerList = new ArrayList<>();
         List<Pose> posesList = new ArrayList<>();
         List<MicroService> microServices = new ArrayList<>();
+        TimeService timeService;
 
         //reading all the jsons files
         Gson gson = new Gson();
@@ -54,45 +59,51 @@ public class GurionRockRunner {
             JSONInput input = gson.fromJson(reader, JSONInput.class);
 
             //build a map for building a camera object
-            String cameraDataPath = input.getCameras().getCamera_datas_path();
+            String cameraDataPath = filebase + input.getCameras().getCamera_datas_path();
             try (FileReader cameraPathReader = new FileReader(cameraDataPath)) {
                 // Define the type for a Map<String, List<StampedDetectedObjects>>
-                Type mapType = new TypeToken<ConcurrentHashMap<String, List<StampedDetectedObjects>>>() {}.getType();
+                Type mapType = new TypeToken<ConcurrentHashMap<String, List<StampedDetectedObjects>>>() {
+                }.getType();
                 ConcurrentHashMap<String, List<StampedDetectedObjects>> camDataMap = gson.fromJson(cameraPathReader, mapType);
+                for (String key : camDataMap.keySet()) {
+                    System.out.println("Key: " + key);
+                    System.out.println("Value: " + camDataMap.get(key));
+                }
 
                 //build all the cameras
                 CamerasConfigurations[] cameras = input.getCameras().getCamerasConfigurations();
-                for (CamerasConfigurations camera : cameras){
-                    List <StampedDetectedObjects> detectedObjects = camDataMap.get(camera.getCamera_key());
+                for (CamerasConfigurations camera : cameras) {
+                    List<StampedDetectedObjects> detectedObjects = camDataMap.get(camera.getCamera_key());
                     Camera newCamera = new Camera(camera.getId(), camera.getFrequency(), detectedObjects);
                     camerasList.add(newCamera);
                 }
+
             } catch (IOException e) {
                 System.out.println("Error reading the file: " + e.getMessage());
             }
 
             //json for lidar_data_base
-            String dataPath = input.getLiDarWorkers().getLidars_data_path();
+            String dataPath = filebase + input.getLiDarWorkers().getLidars_data_path();
 
             //build all the lidar_workers
             LidarConfigurations[] lidars = input.getLiDarWorkers().getLidarConfigurations();
-            for (LidarConfigurations lidar : lidars){
-                LiDarWorkerTracker newLiDarWorkerTracker = new LiDarWorkerTracker(lidar.getId(), lidar.getFrequency());
+            for (LidarConfigurations lidar : lidars) {
+                LiDarWorkerTracker newLiDarWorkerTracker = new LiDarWorkerTracker(lidar.getId(), lidar.getFrequency(), dataPath);
                 LiDarWorkerList.add(newLiDarWorkerTracker);
             }
-
             //build the posses list for GPSiMU
-            String poseJsonFile = input.getPoseJsonFile();
+            String poseJsonFile = filebase + input.getPoseJsonFile();
             try (FileReader poseReader = new FileReader(poseJsonFile)) {
                 // Define the type for a List<Pose>
-                Type listType = new TypeToken<List<Pose>>() {}.getType();
+                Type listType = new TypeToken<List<Pose>>() {
+                }.getType();
                 posesList = gson.fromJson(poseReader, listType);
             } catch (IOException e) {
                 System.out.println("Error reading the file: " + e.getMessage());
             }
+
             //build GPSiMU
             GPSIMU gpsimu = new GPSIMU(posesList);
-
             // Register Microservices
             PoseService poseService = new PoseService(gpsimu);
             messageBus.register(poseService);
@@ -115,17 +126,36 @@ public class GurionRockRunner {
             messageBus.register(fusionSlamService);
             microServices.add(fusionSlamService);
 
-            TimeService timeService = new TimeService(input.getTickTime(), input.getDuration());
+            timeService = new TimeService(input.getTickTime(), input.getDuration());
             messageBus.register(timeService);
             microServices.add(timeService);
 
-        }catch (IOException e) {
+
+        } catch (IOException e) {
             System.out.println("Error reading the file: " + e.getMessage());
         }
+
         // TODO: Start the simulation.
-        for (MicroService microService : microServices) {
-            Thread t = new Thread(microService);
+        List<Thread> threadList = new ArrayList<>();
+        for (int i = 0; i < microServices.size(); i++) {
+            Thread t = new Thread(microServices.get(i));
+            threadList.add(t);
             t.start();
         }
+
+        for (Thread t : threadList) {
+            try {
+                t.join(); // המתנה לסיום ה-Thread
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // שמירה על מצב ה-interruption
+                System.err.println("Thread interrupted: " + e.getMessage());
+            }
+
+
+//            writeStatisticalFolderToJson("./output.json");
+//            writeLandMarksMapToJson("./output.json");
+
+        }
+
     }
 }

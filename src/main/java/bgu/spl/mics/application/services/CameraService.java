@@ -50,9 +50,9 @@ public class CameraService extends MicroService {
                 if(currenTime <= camera.getDetectedObjectsList().get(camera.getDetectedObjectsList().size()-1).getTime()){
                     StampedDetectedObjects stampedDetectedObjects = camera.getStampedDetectedObject(currenTime);
                     //check if the camera detects objects at that tick, otherwise do nothing
-                    if (stampedDetectedObjects != null && !stampedDetectedObjects.getDetectedObjectsList().isEmpty()) {
+                    if (stampedDetectedObjects != null && (stampedDetectedObjects.getDetectedObjectsList() != null) && !(stampedDetectedObjects.getDetectedObjectsList().isEmpty())) {
                         String description = camera.checkError(stampedDetectedObjects);
-                        //check if the camera detected an error, otherwise send the detected objects
+                        // check if the camera detected an error, otherwise send the detected objects
                         if( description != null){
                             camera.setStatus(Camera.Status.ERROR);
                             sendBroadcast(new CrashedBroadcast(description));
@@ -74,6 +74,7 @@ public class CameraService extends MicroService {
             } else if (camera.getStatus() == Camera.Status.ERROR) {
                 sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " disconnected"));
                 terminate();
+
             }
         });
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminated) ->{
