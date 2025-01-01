@@ -15,6 +15,10 @@ public class DetectObjectsEvent implements Event<Boolean> {
 
     }
 
+    public StampedDetectedObjects getStampedDetectedObjects() {
+        return stampedDetectedObjects;
+    }
+
     public List<DetectedObject> getDetectedObjects() {
         return stampedDetectedObjects.getDetectedObjectsList();
     }
@@ -22,4 +26,5 @@ public class DetectObjectsEvent implements Event<Boolean> {
     public int getTime() {
         return stampedDetectedObjects.getTime();
     }
+
 }

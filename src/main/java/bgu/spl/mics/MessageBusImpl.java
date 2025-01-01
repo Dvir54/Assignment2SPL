@@ -81,7 +81,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		if (broadcastServiceMap.containsKey(e.getClass())) {
+		if (eventServiceMap.containsKey(e.getClass())) {
 			MicroService m = null;
 			BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
 			if (queue != null && !queue.isEmpty()) {

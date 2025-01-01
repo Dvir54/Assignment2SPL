@@ -1,7 +1,11 @@
 package bgu.spl.mics.application.objects;
 
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * LiDarWorkerTracker is responsible for managing a LiDAR worker.
  * It processes DetectObjectsEvents and generates TrackedObjectsEvents by using data from the LiDarDataBase.
@@ -14,6 +18,7 @@ public class LiDarWorkerTracker {
     private final int frequency;
     private Status status;
     private final List<TrackedObject> lastTrackedObjects;
+    private ArrayList<DetectObjectsEvent> doneDetectObjectsEvents;
     String databasePath;
     LiDarDataBase liDarDataBase;
 
@@ -29,6 +34,7 @@ public class LiDarWorkerTracker {
         this.lastTrackedObjects = new ArrayList<>();
         this.databasePath = databasePath;
         this.liDarDataBase = LiDarDataBase.getInstance(databasePath);
+        this.doneDetectObjectsEvents = new ArrayList<>();
     }
 
     public int getId() {
@@ -51,30 +57,30 @@ public class LiDarWorkerTracker {
         return lastTrackedObjects;
     }
 
-    public ArrayList<TrackedObject> createTrackedObjectsList(List<DetectedObject> detectedObjectList, int time){
-        ArrayList<TrackedObject> trackedObjects = new ArrayList<>();
-        for (DetectedObject detectedObject : detectedObjectList){
-            String id = detectedObject.getId();
-            StampedCloudPoints stampedCloudPoints = liDarDataBase.getCloudPoint(id, time);
-            TrackedObject trackedObject = new TrackedObject(id, time + getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
-            trackedObjects.add(trackedObject);
+
+    public boolean checkIfError(int time){
+        for(StampedCloudPoints stampedCloudPoints : liDarDataBase.getListCloudPoints()){
+            if(stampedCloudPoints.getTime() == time){
+                if(stampedCloudPoints.getId().equals("ERROR")){
+                    return true;
+                }
+            }
         }
-        return trackedObjects;
+        return false;
     }
 
-    public ArrayList<TrackedObject> createListToSend(int time, ArrayList<TrackedObject> trackedObjects){
+    public ArrayList<TrackedObject> getSendedTrackedObjects(ConcurrentLinkedQueue<DetectObjectsEvent> detectObjectsEvents, int time){
         ArrayList<TrackedObject> sendTrackedObjects = new ArrayList<>();
-        for(TrackedObject trackedObject : trackedObjects){
-            if(trackedObject.getTime() <= time){
-                if(liDarDataBase.getCloudPoint(trackedObject.getId(), time).getId().equals("ERROR")){
-                    setStatus(Status.ERROR);
-                    return null;
-                }
-                else{
+        for(DetectObjectsEvent detectObjectsEvent : detectObjectsEvents){
+            if(detectObjectsEvent.getStampedDetectedObjects().getTime() + getFrequency() <= time){
+                for (DetectedObject detectedObject : detectObjectsEvent.getStampedDetectedObjects().getDetectedObjectsList()){
+                    String id = detectedObject.getId();
+                    StampedCloudPoints stampedCloudPoints = liDarDataBase.getCloudPoint(id, detectObjectsEvent.getStampedDetectedObjects().getTime());
+                    TrackedObject trackedObject = new TrackedObject(id, detectObjectsEvent.getStampedDetectedObjects().getTime() + getFrequency(), detectedObject.getDescription(), stampedCloudPoints.toCloudPointList());
                     sendTrackedObjects.add(trackedObject);
-                    trackedObjects.remove(trackedObject);
-                    lastTrackedObjects.add(trackedObject);
                 }
+                detectObjectsEvents.remove(detectObjectsEvent);
+                doneDetectObjectsEvents.add(detectObjectsEvent);
             }
         }
         return sendTrackedObjects;
@@ -82,6 +88,16 @@ public class LiDarWorkerTracker {
 
     public void addTrackedObject(TrackedObject trackedObject) {
         lastTrackedObjects.add(trackedObject);
+    }
+
+    public void setLastTrackedObjects(ArrayList<TrackedObject> trackedObjects){
+        lastTrackedObjects.clear();
+        lastTrackedObjects.addAll(trackedObjects);
+
+    }
+
+    public ArrayList<DetectObjectsEvent> getDoneDetectObjectsEvents() {
+        return doneDetectObjectsEvents;
     }
 
     @Override

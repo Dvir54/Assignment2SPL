@@ -61,6 +61,9 @@ public class CameraService extends MicroService {
                         else{
                             DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(stampedDetectedObjects);
                             statisticalFolder.incrementDetectedObjects(stampedDetectedObjects.getDetectedObjectsList().size());
+                            //print check
+                            int actualTime = currenTime - camera.getFrequency();
+                            System.out.println("camera"+camera.getId()+" send objects at time "+currenTime + "  that detected at time:  " + actualTime);
                             sendEvent(detectObjectsEvent);
                         }
                     }
