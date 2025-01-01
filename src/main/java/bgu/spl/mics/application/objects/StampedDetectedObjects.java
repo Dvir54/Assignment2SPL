@@ -10,11 +10,11 @@ import java.util.List;
 
 public class StampedDetectedObjects {
     private int time;
-    private final List<DetectedObject> detectedObjectsList;
+    private final List<DetectedObject> detectedObjects;
 
     public StampedDetectedObjects(int time, List<DetectedObject> detectedObjects) {
         this.time = time;
-        this.detectedObjectsList = detectedObjects;
+        this.detectedObjects = detectedObjects;
     }
 
     public int getTime() {
@@ -22,7 +22,7 @@ public class StampedDetectedObjects {
     }
 
     public List<DetectedObject> getDetectedObjectsList() {
-        return detectedObjectsList;
+        return detectedObjects;
     }
 
     //check if to delete
@@ -31,7 +31,7 @@ public class StampedDetectedObjects {
     }
 
     public String checkIfError() {
-        for (DetectedObject obj : detectedObjectsList) {
+        for (DetectedObject obj : detectedObjects) {
             if (obj.getId().equals("ERROR")) {
                 return obj.getDescription();
             }
@@ -43,7 +43,7 @@ public class StampedDetectedObjects {
     public String toString() {
         return "StampedDetectedObject{" +
                 "time=" + time +
-                ", detectedObjects=" + detectedObjectsList +
+                ", detectedObjects=" + detectedObjects +
                 '}';
     }
 }
