@@ -28,4 +28,5 @@ public class CamerasConfigurations {
     public void setCamera_key(String camera_key) {
         this.camera_key = camera_key;
     }
+
 }

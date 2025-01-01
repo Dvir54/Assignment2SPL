@@ -56,7 +56,7 @@ public class Future<T> {
 			isResolved = true;
 			this.result = result;
 			synchronized (lock) {
-				notifyAll();
+				lock.notifyAll();
 			}
 		}
 	}

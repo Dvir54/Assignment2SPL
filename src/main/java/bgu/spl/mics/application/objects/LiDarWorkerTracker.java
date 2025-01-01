@@ -14,6 +14,7 @@ public class LiDarWorkerTracker {
     private final int frequency;
     private Status status;
     private final List<TrackedObject> lastTrackedObjects;
+    String databasePath;
     LiDarDataBase liDarDataBase;
 
 
@@ -21,12 +22,13 @@ public class LiDarWorkerTracker {
         UP, DOWN, ERROR
     }
 
-    public LiDarWorkerTracker(int id, int frequency) {
+    public LiDarWorkerTracker(int id, int frequency, String databasePath) {
         this.id = id;
         this.frequency = frequency;
         this.status = Status.UP;
         this.lastTrackedObjects = new ArrayList<>();
-        this.liDarDataBase = LiDarDataBase.getInstance("src/main/resources/LiDarData.json");
+        this.databasePath = databasePath;
+        this.liDarDataBase = LiDarDataBase.getInstance(databasePath);
     }
 
     public int getId() {

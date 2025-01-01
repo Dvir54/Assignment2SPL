@@ -26,7 +26,7 @@ public class TimeService extends MicroService {
         super("Time");
         this.tickTime = TickTime;
         this.duration = Duration;
-        this.currentTick = 0;
+        this.currentTick = 1;
         statisticalFolder = StatisticalFolder.getInstance();
     }
 

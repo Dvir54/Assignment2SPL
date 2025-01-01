@@ -26,26 +26,23 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	private static class MessageBusHolder {
-		private static final MessageBusImpl INSTANCE = new MessageBusImpl();
+		private static final MessageBusImpl instance = new MessageBusImpl();
 	}
 
 	public static MessageBusImpl getInstance() {
-		return MessageBusHolder.INSTANCE;
+		return MessageBusHolder.instance;
 	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-
-		synchronized (type) {
-			eventServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>()).add(m);
-		}
+		BlockingQueue queue = eventServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>());
+		queue.add(m);
 
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		synchronized (type) {
-			broadcastServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>()).add(m);
-		}
+		BlockingQueue queue = broadcastServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>());
+		queue.add(m);
 	}
 
 	@Override
@@ -53,78 +50,82 @@ public class MessageBusImpl implements MessageBus {
 		Future<T> future = (Future<T>) eventFutureMap.get(e);
 		if (future != null) {
 			future.resolve(result);
-			eventFutureMap.remove(e);
+			//eventFutureMap.remove(e);
 		}
 
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		BlockingQueue<MicroService> list = broadcastServiceMap.get(b.getClass());
-
-		if (list != null && !list.isEmpty()) {
-			for (MicroService m : list) {
-				if (m != null) {
-					BlockingQueue<Message> queue = serviceMessageMap.get(m);
-					if (queue != null) {
-						synchronized (queue) {
-							queue.add(b);
+		if (broadcastServiceMap.containsKey(b.getClass())) {
+			BlockingQueue<MicroService> list = broadcastServiceMap.get(b.getClass());
+			if (list != null && !list.isEmpty()) {
+				synchronized (list) {
+					if (list != null && !list.isEmpty()) {
+						for (MicroService m : list) {
+							BlockingQueue<Message> queue = serviceMessageMap.get(m);
+							if (queue != null) {
+								synchronized (queue) {
+									queue.add(b);
+									queue.notifyAll();
+								}
+							}
 						}
-					}
 
+					}
 				}
+
 			}
 		}
-
 	}
-	
+
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		MicroService m;
-		BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
+		if (broadcastServiceMap.containsKey(e.getClass())) {
+			MicroService m = null;
+			BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
+			if (queue != null && !queue.isEmpty()) {
+				synchronized (queue) {
+					if (queue != null && !queue.isEmpty()) {
+						m = queue.poll();
+						queue.add(m);
+					}
+				}
 
-		if (queue == null || queue.isEmpty()) {
-			return null;
-		}
-		synchronized (queue) {
-			m = queue.poll();
-			queue.add(m);
-		}
-
-		BlockingQueue<Message> queue2 = serviceMessageMap.get(m);
-
-		if (queue2 != null) {
-			synchronized (queue2) {
-				queue2.add(e);
+				BlockingQueue<Message> queue2 = serviceMessageMap.get(m);
+				if (queue2 != null) {
+					synchronized (queue2) {
+						if (queue2 != null) {
+							queue2.add(e);
+						}
+					}
+				}
 			}
 		}
 
 		Future<T> future = new Future<>();
 		eventFutureMap.put(e, future);
 		return future;
-
 	}
+
 
 	@Override
 	public void register(MicroService m) {
-		synchronized (m) {
-			serviceMessageMap.putIfAbsent(m, new LinkedBlockingQueue<>());
-		}
+		serviceMessageMap.putIfAbsent(m, new LinkedBlockingQueue<>());
 	}
 
 	@Override
 	public void unregister(MicroService m) {
-		synchronized (m) {
+		synchronized (serviceMessageMap) {
 			serviceMessageMap.remove(m);
 		}
-		for (Class<? extends Event<?>> type : eventServiceMap.keySet()) {
-			synchronized (type) {
+		synchronized (eventServiceMap) {
+			for (Class<? extends Event<?>> type : eventServiceMap.keySet()) {
 				eventServiceMap.get(type).remove(m);
 			}
 		}
-
-		for (Class<? extends Broadcast> type2 : broadcastServiceMap.keySet()) {
-			synchronized (type2) {
+		synchronized (broadcastServiceMap) {
+			for (Class<? extends Broadcast> type2 : broadcastServiceMap.keySet()) {
 				broadcastServiceMap.get(type2).remove(m);
 			}
 		}
@@ -132,12 +133,18 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		BlockingQueue<Message> queue = serviceMessageMap.get(m);
-		try {
-			return queue.take();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw e;
+		try{
+			BlockingQueue<Message> queue = serviceMessageMap.get(m);
+			synchronized (m) {
+				try {
+					return queue.take();
+				} catch (InterruptedException e) {
+					throw new InterruptedException();
+				}
+			}
+		}
+		catch (NullPointerException e) {
+			throw new IllegalStateException();
 		}
 	}
 
