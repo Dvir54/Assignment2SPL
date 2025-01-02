@@ -11,11 +11,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class JsonOutputError {
     private static StatisticalFolder statisticalFolder;
     private static FusionSlam fusionSlam;
-    private static List<Pose> poses;
+    private static ConcurrentHashMap<Integer,Pose> poses;
     private static List<LandMark> landMarks;
     private static LinkedHashMap<String , StampedDetectedObjects> lastCamerasFrame = new LinkedHashMap<>();
     private static LinkedHashMap<String , List<TrackedObject>> lastLiDarWorkerTrackersFrame = new LinkedHashMap<>();
