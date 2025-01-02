@@ -84,6 +84,7 @@ public class CameraService extends MicroService {
             }
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            sendBroadcast(new CrashedBroadcast("Camera" + camera.getId(),"Camera disconnected"));
             terminate();
         });
     }
