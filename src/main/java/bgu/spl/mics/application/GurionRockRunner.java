@@ -9,14 +9,12 @@ import bgu.spl.mics.application.parse.LidarConfigurations;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
 import static bgu.spl.mics.application.parse.JsonOutput.writeOutputToJson;
 import static bgu.spl.mics.application.parse.JsonOutputError.writeErrorToJson;
 
@@ -27,6 +25,7 @@ import static bgu.spl.mics.application.parse.JsonOutputError.writeErrorToJson;
  * services, objects, and configurations.
  * </p>
  */
+
 public class GurionRockRunner {
 
     /**
@@ -36,12 +35,12 @@ public class GurionRockRunner {
      *
      * @param args Command-line arguments. The first argument is expected to be the path to the configuration file.
      */
-    public static void main(String[] args) {
 
+    public static void main(String[] args) {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input_with_error/";
+        String filebase = "example_input_2/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -95,7 +94,6 @@ public class GurionRockRunner {
                 Type listType = new TypeToken<List<Pose>>() {
                 }.getType();
                 posesList = gson.fromJson(poseReader, listType);
-                System.out.println(posesList);
             } catch (IOException e) {
                 System.out.println("Error reading the file: " + e.getMessage());
             }
@@ -161,7 +159,5 @@ public class GurionRockRunner {
         else{
             writeErrorToJson("./error.json", camerasList, LiDarWorkerList);
         }
-
-
     }
 }

@@ -3,11 +3,8 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.*;
-
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -17,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * cloud point data and updates the system's StatisticalFolder upon sending its
  * observations.
  */
+
 public class LiDarService extends MicroService {
     private final LiDarWorkerTracker liDarWorkerTracker;
     private ConcurrentLinkedQueue<DetectObjectsEvent> detectObjectsEvents;
@@ -25,13 +23,12 @@ public class LiDarService extends MicroService {
     private final String databasePath;
     private final LiDarDataBase lidarDataBase;
 
-
-
     /**
      * Constructor for LiDarService.
      *
      * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
      */
+
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker, String databasePath) {
         super("Lidar" + LiDarWorkerTracker.getId());
         this.liDarWorkerTracker = LiDarWorkerTracker;
@@ -48,6 +45,7 @@ public class LiDarService extends MicroService {
      * Registers the service to handle DetectObjectsEvents and TickBroadcasts,
      * and sets up the necessary callbacks for processing data.
      */
+
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
@@ -101,4 +99,3 @@ public class LiDarService extends MicroService {
         });
     }
 }
-//

@@ -5,7 +5,6 @@ import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Manages the fusion of sensor data for simultaneous localization and mapping (SLAM).
@@ -73,7 +72,6 @@ public class FusionSlam {
                 }
                 isExist = true;
             }
-
         }
         if (!isExist) {
             statisticalFolder.incrementLandmarks(1);
@@ -89,7 +87,6 @@ public class FusionSlam {
                 LandMark newLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
                 updateLandmark(newLandMark);
             }
-
     }
 
 
