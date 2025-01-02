@@ -4,6 +4,7 @@ import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FusionSlam {
     private final List<LandMark> landmarks;
-    private final List<Pose> poses;
+    private final ConcurrentHashMap<Integer,Pose> poses;
     private int countMicroServices;
     private StatisticalFolder statisticalFolder;
     private boolean isCrashed = false;
@@ -24,7 +25,7 @@ public class FusionSlam {
     // Private constructor for Singleton
     private FusionSlam() {
         this.landmarks = new ArrayList<>();
-        this.poses = new ArrayList<>();
+        this.poses = new ConcurrentHashMap<>();
         this.countMicroServices = 0;
         this.statisticalFolder = StatisticalFolder.getInstance();
     }
@@ -43,12 +44,12 @@ public class FusionSlam {
         return landmarks;
     }
 
-    public List<Pose> getPoses() {
+    public ConcurrentHashMap<Integer,Pose> getPoses() {
         return poses;
     }
 
-    public void addPose(Pose pose) {
-        poses.add(pose);
+    public void addPose(int time ,Pose pose) {
+        poses.put(time,pose);
     }
 
     public void addLandmark(LandMark landmark) {
@@ -82,8 +83,8 @@ public class FusionSlam {
 
     public void createLandMarks(TrackedObjectsEvent trackedObjectsEvent, int time){
             List<TrackedObject> trackedObjects = trackedObjectsEvent.getTrackedObjectsList();
-            Pose pose = poses.get(time - 2);
             for (TrackedObject trackedObject : trackedObjects) {
+            Pose pose = poses.get(trackedObject.getTime());
                 List<CloudPoint> list = trackedObject.calculateGlobalCoordinates(pose.getX(), pose.getY(), pose.getYaw());
                 LandMark newLandMark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), list);
                 updateLandmark(newLandMark);
