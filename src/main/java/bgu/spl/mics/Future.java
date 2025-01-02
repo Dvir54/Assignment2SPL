@@ -10,11 +10,13 @@ import java.util.concurrent.TimeUnit;
  * Only private methods may be added to this class.
  * No public constructor is allowed except for the empty constructor.
  */
+
 public class Future<T> {
 
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
+
 	private T result;
 	private boolean isResolved;
 	private final Object lock = new Object();
@@ -32,6 +34,7 @@ public class Future<T> {
 	 * @return return the result of type T if it is available, if not wait until it is available.
 	 *
 	 */
+
 	public T get() {
 		while (!isResolved) {
 			synchronized (lock) {
@@ -50,6 +53,7 @@ public class Future<T> {
 	/**
 	 * Resolves the result of this Future object.
 	 */
+
 	public void resolve (T result) {
 
 		if (!isResolved) {
@@ -60,14 +64,17 @@ public class Future<T> {
 			}
 		}
 	}
+
 	/**
 	 * @return true if this object has been resolved, false otherwise
 	 */
+
 	public boolean isDone() {
 		synchronized (lock) {
 			return isResolved;
 		}
 	}
+
 	/**
 	 * retrieves the result the Future object holds if it has been resolved,
 	 * This method is non-blocking, it has a limited amount of time determined
@@ -79,6 +86,7 @@ public class Future<T> {
 	 * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
 	 *         elapsed, return null.
 	 */
+
 	public T get(long timeout, TimeUnit unit) {
 			if (!isResolved) {
 				synchronized (lock) {

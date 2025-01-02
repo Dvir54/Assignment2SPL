@@ -1,7 +1,6 @@
 package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;

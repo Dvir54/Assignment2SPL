@@ -10,12 +10,12 @@ import bgu.spl.mics.application.objects.StatisticalFolder;
  * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
  * at regular intervals and controlling the simulation's duration.
  */
+
 public class TimeService extends MicroService {
     private final int tickTime;
     private final int duration;
     private int currentTick;
     StatisticalFolder statisticalFolder;
-
 
     /**
      * Constructor for TimeService.
@@ -23,6 +23,7 @@ public class TimeService extends MicroService {
      * @param TickTime  The duration of each tick in milliseconds.
      * @param Duration  The total number of ticks before the service terminates.
      */
+
     public TimeService(int TickTime, int Duration) {
         super("Time");
         this.tickTime = TickTime;
@@ -35,9 +36,9 @@ public class TimeService extends MicroService {
      * Initializes the TimeService.
      * Starts broadcasting TickBroadcast messages and terminates after the specified duration.
      */
+
     @Override
     protected void initialize() {
-
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminatedBroadcast) -> {
             if(terminatedBroadcast.getSenderId().equals("FusionSlam terminated")){
                 terminate();

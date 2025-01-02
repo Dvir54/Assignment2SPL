@@ -15,15 +15,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * This service receives TrackedObjectsEvents from LiDAR workers and PoseEvents from the PoseService,
  * transforming and updating the map with new landmarks.
  */
+
 public class FusionSlamService extends MicroService {
     private final FusionSlam fusionSlam;
     private ConcurrentLinkedQueue<TrackedObjectsEvent> trackedObjectEventList;
     private List<LandMark> updateLandMarks;
+
     /**
      * Constructor for FusionSlamService.
      *
      * @param fusionSlam The FusionSLAM object responsible for managing the global map.
      */
+
     public FusionSlamService(FusionSlam fusionSlam) {
         super("FusionSlam");
         this.fusionSlam = fusionSlam;
@@ -36,6 +39,7 @@ public class FusionSlamService extends MicroService {
      * Registers the service to handle TrackedObjectsEvents, PoseEvents, and TickBroadcasts,
      * and sets up callbacks for updating the global map.
      */
+
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
@@ -73,10 +77,20 @@ public class FusionSlamService extends MicroService {
 
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
-            fusionSlam.setIsCrashed();
-            fusionSlam.setErrorDescription(crashed.getSenderType());
-            fusionSlam.setFaultySensor(crashed.getSenderId());
-            terminate();
+            if(!fusionSlam.getIsCrashed()){
+                fusionSlam.setIsCrashed();
+                fusionSlam.reduceMicroService();
+                fusionSlam.setErrorDescription(crashed.getSenderType());
+                fusionSlam.setFaultySensor(crashed.getSenderId());
+            } else if (fusionSlam.getCountMicroServices() == 1){
+                fusionSlam.reduceMicroService();
+                sendBroadcast(new CrashedBroadcast("FusionSlam", "FusionSlam disconnected"));
+                terminate();
+            }
+            else{
+                fusionSlam.reduceMicroService();
+
+            }
         });
     }
 }
