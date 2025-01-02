@@ -17,6 +17,9 @@ public class FusionSlam {
     private final List<Pose> poses;
     private int countMicroServices;
     private StatisticalFolder statisticalFolder;
+    private boolean isCrashed = false;
+    private String errorDescription = "";
+    private String faultySensor = "";
 
     // Private constructor for Singleton
     private FusionSlam() {
@@ -99,6 +102,30 @@ public class FusionSlam {
 
     public void reduceMicroService() {
         countMicroServices--;
+    }
+
+    public boolean getIsCrashed() {
+        return isCrashed;
+    }
+
+    public void setIsCrashed() {
+        this.isCrashed = true;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
+    }
+
+    public String getFaultySensor() {
+        return faultySensor;
+    }
+
+    public void setFaultySensor(String faultySensor) {
+        this.faultySensor = faultySensor;
     }
 
     @Override

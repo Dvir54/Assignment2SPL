@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,6 +14,7 @@ public class Camera {
     private final int frequency;
     private Status status;
     private final List<StampedDetectedObjects> detectedObjectsList;
+    private StampedDetectedObjects lastCameraFrame;
 
     public enum Status {
         UP, DOWN, ERROR
@@ -23,6 +25,7 @@ public class Camera {
         this.frequency = frequency;
         this.status = Status.UP;
         this.detectedObjectsList = stampList;
+        this.lastCameraFrame = null;
     }
 
     public int getId() {
@@ -62,6 +65,17 @@ public class Camera {
         return stampedDetectedObjects.checkIfError();
     }
 
+    public StampedDetectedObjects getLastDetectedObjects() {
+        return lastCameraFrame;
+    }
+
+    public void setLastCameraFrame(StampedDetectedObjects stampedDetectedObjects) {
+        lastCameraFrame = stampedDetectedObjects;
+    }
+
+    public StampedDetectedObjects getLastCameraFrame() {
+        return lastCameraFrame;
+    }
 
     @Override
     public String toString() {
