@@ -96,6 +96,7 @@ public class LiDarService extends MicroService {
             }
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            sendBroadcast(new CrashedBroadcast("lidar"+liDarWorkerTracker.getId(), "Lidar disconnected"));
             terminate();
         });
     }
