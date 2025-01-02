@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static bgu.spl.mics.application.parse.JsonOutput.writeLandMarksMapToJson;
-import static bgu.spl.mics.application.parse.JsonOutput.writeStatisticalFolderToJson;
+import static bgu.spl.mics.application.parse.JsonOutput.writeOutputToJson;
+import static bgu.spl.mics.application.parse.JsonOutputError.writeErrorToJson;
 
 /**
  * The main entry point for the GurionRock Pro Max Ultra Over 9000 simulation.
@@ -41,7 +41,7 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input/";
+        String filebase = "example_input_with_error/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -154,16 +154,21 @@ public class GurionRockRunner {
 
         for (Thread t : threadList) {
             try {
-                t.join(); // המתנה לסיום ה-Thread
+                t.join();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // שמירה על מצב ה-interruption
+                Thread.currentThread().interrupt();
                 System.err.println("Thread interrupted: " + e.getMessage());
             }
 
         }
 
-        writeLandMarksMapToJson("./output.json");
-        writeStatisticalFolderToJson("./output.json");
+        if(!fusionSlam.getIsCrashed()){
+            writeOutputToJson("./output.json");
+        }
+        else{
+            writeErrorToJson("./error.json", camerasList, LiDarWorkerList);
+        }
+
 
     }
 }

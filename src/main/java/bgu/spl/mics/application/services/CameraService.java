@@ -55,12 +55,13 @@ public class CameraService extends MicroService {
                         // check if the camera detected an error, otherwise send the detected objects
                         if( description != null){
                             camera.setStatus(Camera.Status.ERROR);
-                            sendBroadcast(new CrashedBroadcast(description));
+                            sendBroadcast(new CrashedBroadcast("Camera" + camera.getId(),"Camera disconnected"));
                             terminate();
                         }
                         else{
                             DetectObjectsEvent detectObjectsEvent = new DetectObjectsEvent(stampedDetectedObjects);
                             statisticalFolder.incrementDetectedObjects(stampedDetectedObjects.getDetectedObjectsList().size());
+                            camera.setLastCameraFrame(stampedDetectedObjects);
                             sendEvent(detectObjectsEvent);
                         }
                     }
@@ -72,7 +73,7 @@ public class CameraService extends MicroService {
                     terminate();
                 }
             } else if (camera.getStatus() == Camera.Status.ERROR) {
-                sendBroadcast(new CrashedBroadcast("camera"+ camera.getId() + " disconnected"));
+                sendBroadcast(new CrashedBroadcast("Camera" + camera.getId(),"Camera disconnected"));
                 terminate();
 
             }

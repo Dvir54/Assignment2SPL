@@ -73,6 +73,9 @@ public class FusionSlamService extends MicroService {
 
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            fusionSlam.setIsCrashed();
+            fusionSlam.setErrorDescription(crashed.getSenderType());
+            fusionSlam.setFaultySensor(crashed.getSenderId());
             terminate();
         });
     }

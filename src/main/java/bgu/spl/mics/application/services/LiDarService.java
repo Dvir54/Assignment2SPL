@@ -56,7 +56,7 @@ public class LiDarService extends MicroService {
                 if (currenTime <= lidarDataBase.getListCloudPoints().get(lidarDataBase.getListCloudPoints().size() - 1).getTime() + liDarWorkerTracker.getFrequency()) {
                     if(liDarWorkerTracker.checkIfError(currenTime)){
                         liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.ERROR);
-                        sendBroadcast(new CrashedBroadcast("lidar"+liDarWorkerTracker.getId()+ " disconnected"));
+                        sendBroadcast(new CrashedBroadcast("lidar"+liDarWorkerTracker.getId(), "Lidar disconnected"));
                         terminate();
                     }
                     else {
@@ -84,7 +84,7 @@ public class LiDarService extends MicroService {
             if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP){
                 detectObjectsEvents.add(event);
             } else if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.ERROR) {
-                sendBroadcast(new CrashedBroadcast("lidar"+ liDarWorkerTracker.getId() + " disconnected"));
+                sendBroadcast(new CrashedBroadcast("lidar"+liDarWorkerTracker.getId(), "Lidar disconnected"));
                 terminate();
             }
 

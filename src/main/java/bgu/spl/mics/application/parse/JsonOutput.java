@@ -10,35 +10,25 @@ import java.util.List;
 
 
 public class JsonOutput {
+    private StatisticalFolder statisticalFolder;
+    private List<LandMark> landMarks;
 
-    public static void writeStatisticalFolderToJson(String outputFilePath) {
-        StatisticalFolder folder = StatisticalFolder.getInstance();
-
-        // Converts to json
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(folder);
-        System.out.println(jsonOutput);
-
-        //Writes to file
-        try (FileWriter writer = new FileWriter(outputFilePath)) {
-            writer.write(jsonOutput);
-        } catch (IOException e) {
-            System.err.println("Error writing JSON to file: " + e.getMessage());
-        }
+    public JsonOutput() {
+        this.statisticalFolder = StatisticalFolder.getInstance();
+        this.landMarks = FusionSlam.getInstance().getLandmarks();
     }
 
-    public static void writeLandMarksMapToJson(String outputFilePath) {
-        List<LandMark> folder = FusionSlam.getInstance().getLandmarks();
+    public static void writeOutputToJson(String outputFilePath) {
+        // Create the combined output
+        JsonOutput combinedOutput = new JsonOutput();
 
-        //Converts to json
-//        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
-        Gson gson2 = new Gson();
-        String jsonOutput1 = gson2.toJson(folder);
-        System.out.println(jsonOutput1);
+        // Convert to JSON
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(combinedOutput);
 
-        // writes to file
+        // Write to file
         try (FileWriter writer = new FileWriter(outputFilePath)) {
-            writer.write(jsonOutput1);
+            writer.write(jsonOutput);
         } catch (IOException e) {
             System.err.println("Error writing JSON to file: " + e.getMessage());
         }
