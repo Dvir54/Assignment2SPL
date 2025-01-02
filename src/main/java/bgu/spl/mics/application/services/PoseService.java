@@ -56,6 +56,7 @@ public class PoseService extends MicroService {
             }
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            sendBroadcast(new CrashedBroadcast("gpsimu", "Gps disconnected"));
             terminate();
         });
     }

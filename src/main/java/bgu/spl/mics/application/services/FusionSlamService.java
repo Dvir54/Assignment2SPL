@@ -73,10 +73,20 @@ public class FusionSlamService extends MicroService {
 
         });
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
-            fusionSlam.setIsCrashed();
-            fusionSlam.setErrorDescription(crashed.getSenderType());
-            fusionSlam.setFaultySensor(crashed.getSenderId());
-            terminate();
+            if(!fusionSlam.getIsCrashed()){
+                fusionSlam.setIsCrashed();
+                fusionSlam.reduceMicroService();
+                fusionSlam.setErrorDescription(crashed.getSenderType());
+                fusionSlam.setFaultySensor(crashed.getSenderId());
+            } else if (fusionSlam.getCountMicroServices() == 1){
+                fusionSlam.reduceMicroService();
+                sendBroadcast(new CrashedBroadcast("FusionSlam", "FusionSlam disconnected"));
+                terminate();
+            }
+            else{
+                fusionSlam.reduceMicroService();
+
+            }
         });
     }
 }

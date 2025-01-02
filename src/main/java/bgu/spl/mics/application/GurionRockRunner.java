@@ -41,7 +41,7 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input_with_error/";
+        String filebase = "example_input_2/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();

@@ -51,7 +51,6 @@ public class JsonOutputError {
         // Serialize to JSON
         Gson gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(LinkedHashMap.class, new LinkedHashMapSerializer()) .create();
         JsonObject jsonOutput = gson.toJsonTree(errorDetails).getAsJsonObject();
-
         // Write to file
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write(gson.toJson(jsonOutput));
