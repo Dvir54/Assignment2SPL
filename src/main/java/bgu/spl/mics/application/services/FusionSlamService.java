@@ -50,7 +50,7 @@ public class FusionSlamService extends MicroService {
 
         subscribeEvent(PoseEvent.class, (PoseEvent poseEvent) ->{
             Pose pose = poseEvent.getCurrPose();
-            fusionSlam.addPose(pose);
+            fusionSlam.addPose(pose.getTime(), pose);
             complete(poseEvent, true);
         });
 

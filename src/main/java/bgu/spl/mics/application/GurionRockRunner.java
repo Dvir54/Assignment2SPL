@@ -41,7 +41,7 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input_2/";
+        String filebase = "example_input_with_error/";
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -65,10 +65,6 @@ public class GurionRockRunner {
                 Type mapType = new TypeToken<ConcurrentHashMap<String, List<StampedDetectedObjects>>>() {
                 }.getType();
                 ConcurrentHashMap<String, List<StampedDetectedObjects>> camDataMap = gson.fromJson(cameraPathReader, mapType);
-                for (String key : camDataMap.keySet()) {
-                    System.out.println("Key: " + key);
-                    System.out.println("Value: " + camDataMap.get(key));
-                }
 
                 //build all the cameras
                 CamerasConfigurations[] cameras = input.getCameras().getCamerasConfigurations();
@@ -90,9 +86,6 @@ public class GurionRockRunner {
             for (LidarConfigurations lidar : lidars) {
                 LiDarWorkerTracker newLiDarWorkerTracker = new LiDarWorkerTracker(lidar.getId(), lidar.getFrequency(), dataPath);
                 LiDarWorkerList.add(newLiDarWorkerTracker);
-            }
-            for (LiDarWorkerTracker lidarWorker : LiDarWorkerList) {
-                System.out.println("Created LiDarWorkerTracker: " + lidarWorker);
             }
 
             //build the posses list for GPSiMU
