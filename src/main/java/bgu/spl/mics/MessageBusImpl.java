@@ -53,7 +53,6 @@ public class MessageBusImpl implements MessageBus {
 			future.resolve(result);
 			//eventFutureMap.remove(e);
 		}
-
 	}
 
 	@Override
@@ -82,22 +81,22 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		if (eventServiceMap.containsKey(e.getClass())) {
-			MicroService m = null;
-			BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
-			if (queue != null && !queue.isEmpty()) {
-				synchronized (queue) {
-					if (queue != null && !queue.isEmpty()) {
+		synchronized (e.getClass()) { //makes sure the roundrobin remains correct in case two events of the same type were sent
+			if (eventServiceMap.containsKey(e.getClass())) {
+				MicroService m = null;
+				BlockingQueue<MicroService> queue = eventServiceMap.get(e.getClass());
+				if (queue != null && !queue.isEmpty()) {
 						m = queue.poll();
 						queue.add(m);
 					}
-				}
 
-				BlockingQueue<Message> queue2 = serviceMessageMap.get(m);
-				if (queue2 != null) {
-					synchronized (queue2) {
-						if (queue2 != null) {
-							queue2.add(e);
+				if(m != null) {
+					BlockingQueue<Message> queue2 = serviceMessageMap.get(m);
+					if (queue2 != null) {
+						synchronized (queue2) {
+							if (queue2 != null) {
+								queue2.add(e);
+							}
 						}
 					}
 				}
@@ -118,6 +117,11 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		synchronized (serviceMessageMap) {
+			for(Message msg : serviceMessageMap.get(m)){
+				if(msg instanceof Event) {
+					complete((Event) msg, null);
+				}
+			}
 			serviceMessageMap.remove(m);
 		}
 		synchronized (eventServiceMap) {
@@ -134,19 +138,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		try{
-			BlockingQueue<Message> queue = serviceMessageMap.get(m);
-			synchronized (m) {
-				try {
-					return queue.take();
-				} catch (InterruptedException e) {
-					throw new InterruptedException();
-				}
+			if(!serviceMessageMap.containsKey(m)) {
+				throw new IllegalStateException("No such microservice");
 			}
+			return serviceMessageMap.get(m).take();
 		}
-		catch (NullPointerException e) {
-			throw new IllegalStateException();
-		}
-	}
-
 }
