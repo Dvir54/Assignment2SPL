@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +41,7 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         String filePath = args[0];
-        String filebase = "example_input/";
+        String filebase = Paths.get(filePath).getParent().toFile().getAbsolutePath();
 
         MessageBusImpl messageBus = MessageBusImpl.getInstance();
         FusionSlam fusionSlam = FusionSlam.getInstance();
