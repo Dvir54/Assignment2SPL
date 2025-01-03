@@ -51,7 +51,7 @@ public class LiDarService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) ->{
             int currenTime = tick.getCurrentTime();
             if (liDarWorkerTracker.getStatus() == LiDarWorkerTracker.Status.UP) {
-                if (currenTime <= lidarDataBase.getListCloudPoints().get(lidarDataBase.getListCloudPoints().size() - 1).getTime() + liDarWorkerTracker.getFrequency()) {
+                if (currenTime <= lidarDataBase.getListCloudPoints().get(lidarDataBase.getListCloudPoints().size() - 1).getTime() + liDarWorkerTracker.getFrequency() || liDarWorkerTracker.getCounterOfTrackedObjects() < lidarDataBase.getListCloudPoints().size()) {
                     if(liDarWorkerTracker.checkIfError(currenTime)){
                         liDarWorkerTracker.setStatus(LiDarWorkerTracker.Status.ERROR);
                         sendBroadcast(new CrashedBroadcast("lidar"+liDarWorkerTracker.getId(), "Lidar disconnected"));
@@ -64,6 +64,7 @@ public class LiDarService extends MicroService {
                             complete(detectObjectsEvent, true);
                         }
                         if(!sendTrackedObjects.isEmpty()){
+                            liDarWorkerTracker.setCounterOfTrackedObjects(sendTrackedObjects.size());
                             statisticalFolder.incrementTrackedObjects(sendTrackedObjects.size());
                             liDarWorkerTracker.setLastTrackedObjects(sendTrackedObjects);
                             TrackedObjectsEvent trackedObjectsEvent = new TrackedObjectsEvent(sendTrackedObjects);
