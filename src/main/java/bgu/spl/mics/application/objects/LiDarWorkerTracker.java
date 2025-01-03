@@ -97,6 +97,14 @@ public class LiDarWorkerTracker {
 
     }
 
+    public int getCounterOfTrackedObjects(){
+        return liDarDataBase.getCountOfTrackedObjects();
+    }
+
+    public void setCounterOfTrackedObjects(int amount){
+        liDarDataBase.setCountOfTrackedObjects(amount);
+    }
+
     public ArrayList<DetectObjectsEvent> getDoneDetectObjectsEvents() {
         return doneDetectObjectsEvents;
     }

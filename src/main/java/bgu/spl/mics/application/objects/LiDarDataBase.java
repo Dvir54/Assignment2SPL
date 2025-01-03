@@ -24,6 +24,7 @@ public class LiDarDataBase {
     private final List<StampedCloudPoints> listCloudPoints;
     private static LiDarDataBase instance;
     private final Object lock = new Object();
+    private int countOfTrackedObjects = 0;
 
     private LiDarDataBase(List<StampedCloudPoints> cloudPointsList) {
         this.listCloudPoints = cloudPointsList;
@@ -71,6 +72,14 @@ public class LiDarDataBase {
             }
             return null;
         }
+    }
+
+    public int getCountOfTrackedObjects() {
+        return countOfTrackedObjects;
+    }
+
+    public void setCountOfTrackedObjects(int amount){
+        this.countOfTrackedObjects = this.countOfTrackedObjects + amount;
     }
 
     @Override
