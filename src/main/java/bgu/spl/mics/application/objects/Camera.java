@@ -51,6 +51,14 @@ public class Camera {
         detectedObjectsList.add(detectedObject);
     }
 
+
+    /**
+     * PRE: tickTime > 0, detectedObjectsList != null, frequency > 0
+     * POST:
+     * if (detectedObjects.getTime() + frequency == tickTime): @RETURN == stampedDetectedObjects
+     * else: @RETURN == null
+     **/
+
     public StampedDetectedObjects getStampedDetectedObject(int tickTime) {
         for (StampedDetectedObjects stampedDetectedObjects : detectedObjectsList) {
             if (stampedDetectedObjects.getTime() + getFrequency() == tickTime) {
