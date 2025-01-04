@@ -79,6 +79,17 @@ public class FusionSlam {
         }
     }
 
+    /**
+     * covert all the relevent tracked objects to Landmarks with global coordinates
+     *
+     * PRE: trackedObjectsEvent != null, time > 0, poses != null, trackedObject.getTime() != null, trackedObject.getId() != null, trackedObject.getDescription() != null
+     * POST:
+     * A new object of type LandMark is created based on the coordinates obtained from the function trackedObject.calculateGlobalCoordinates.
+     * If an object of type LandMark with the same id already exists in the landmarks list: The existing LandMark will be updated (using the updateLandmark method).
+     * If an object of type LandMark with the same id does not exist in the landmarks list: The new object will be added to the landmarks list, and the number of LandMarks in the StatisticalFolder will be updated.
+     * The landmarks list will be updated accordingly, either by adding new LandMark objects or updating existing ones.
+     **/
+
     public void createLandMarks(TrackedObjectsEvent trackedObjectsEvent, int time){
             List<TrackedObject> trackedObjects = trackedObjectsEvent.getTrackedObjectsList();
             for (TrackedObject trackedObject : trackedObjects) {

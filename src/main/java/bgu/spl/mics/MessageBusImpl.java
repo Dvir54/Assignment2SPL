@@ -34,11 +34,32 @@ public class MessageBusImpl implements MessageBus {
 		return MessageBusHolder.instance;
 	}
 	@Override
+
+	/**
+	 *
+	 * PRE: type != null, m != null, eventServiceMap != null
+	 * POST:
+	 * A BlockingQueue corresponding to the type is created in eventServiceMap if it does not already exist.
+	 * The provided MicroService (m) is added to the BlockingQueue associated with the given type.
+	 * The eventServiceMap is updated to include the mapping of type to the queue containing the newly subscribed MicroService.
+	 *
+	 **/
+
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		BlockingQueue queue = eventServiceMap.computeIfAbsent(type, k -> new LinkedBlockingQueue<>());
 		queue.add(m);
 
 	}
+
+	/**
+	 *
+	 * PRE: type != null, m != null, broadcastServiceMap != null
+	 * POST:
+	 * A BlockingQueue corresponding to the type is created in broadcastServiceMap if it does not already exist.
+	 * The provided MicroService (m) is added to the BlockingQueue associated with the given type.
+	 * The broadcastServiceMap is updated to include the mapping of type to the queue containing the newly subscribed MicroService.
+	 *
+	 **/
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
@@ -108,6 +129,15 @@ public class MessageBusImpl implements MessageBus {
 		return future;
 	}
 
+	/**
+	 *
+	 * PRE: m != null, serviceMap != null
+	 * POST:
+	 * If the MicroService (m) is not already present in serviceMessageMap, a new LinkedBlockingQueue is created and associated with m.
+	 * If the MicroService (m) is already present in serviceMessageMap, the map remains unchanged.
+	 * The serviceMessageMap will include the provided MicroService (m) as a key, mapped to its own LinkedBlockingQueue.
+	 *
+	 **/
 
 	@Override
 	public void register(MicroService m) {
@@ -143,4 +173,17 @@ public class MessageBusImpl implements MessageBus {
 			}
 			return serviceMessageMap.get(m).take();
 		}
+
+	public ConcurrentHashMap<MicroService, BlockingQueue<Message>> getServiceMessageMap() {
+		return serviceMessageMap;
+	}
+
+	public ConcurrentHashMap<Class<? extends Event<?>>, BlockingQueue<MicroService>>  getEventServiceMap() {
+		return eventServiceMap;
+	}
+
+	public ConcurrentHashMap<Class<? extends Broadcast>, BlockingQueue<MicroService>> getBroadcastServiceMap() {
+		return broadcastServiceMap;
+	}
+
 }

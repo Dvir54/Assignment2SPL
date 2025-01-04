@@ -57,7 +57,7 @@ public class TimeService extends MicroService {
                     currentTick = currentTick +1;
                     statisticalFolder.incrementSystemRuntime(1);
                     sendBroadcast(new TickBroadcast(currentTick));
-                    Thread.sleep(tickTime);
+                    Thread.sleep(tickTime*1000);
                 }
                 else {
                     sendBroadcast(new TerminatedBroadcast("TimeService"));
