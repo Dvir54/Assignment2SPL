@@ -59,7 +59,7 @@ public class GurionRockRunner {
             JSONInput input = gson.fromJson(reader, JSONInput.class);
 
             //build a map for building a camera object
-            String cameraDataPath = filebase + input.getCameras().getCamera_datas_path();
+            String cameraDataPath = filebase + input.getCameras().getCamera_datas_path().substring(1);
             try (FileReader cameraPathReader = new FileReader(cameraDataPath)) {
                 // Define the type for a Map<String, List<StampedDetectedObjects>>
                 Type mapType = new TypeToken<ConcurrentHashMap<String, List<StampedDetectedObjects>>>() {
@@ -79,7 +79,7 @@ public class GurionRockRunner {
             }
 
             //json for lidar_data_base
-            String dataPath = filebase + input.getLiDarWorkers().getLidars_data_path();
+            String dataPath = filebase + input.getLiDarWorkers().getLidars_data_path().substring(1);
 
             //build all the lidar_workers
             LidarConfigurations[] lidars = input.getLiDarWorkers().getLidarConfigurations();
@@ -89,7 +89,7 @@ public class GurionRockRunner {
             }
 
             //build the posses list for GPSiMU
-            String poseJsonFile = filebase + input.getPoseJsonFile();
+            String poseJsonFile = filebase + input.getPoseJsonFile().substring(1);
             try (FileReader poseReader = new FileReader(poseJsonFile)) {
                 // Define the type for a List<Pose>
                 Type listType = new TypeToken<List<Pose>>() {
